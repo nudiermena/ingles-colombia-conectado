@@ -88,8 +88,15 @@ const LevelCard = ({
           variant={isLocked ? "outline" : "lesson"} 
           className="w-full"
           disabled={isLocked}
+          asChild={!isLocked}
         >
-          {isLocked ? "Próximamente" : progress > 0 ? "Continuar" : "Comenzar"}
+          {!isLocked ? (
+            <Link to={`/nivel/${level.toLowerCase()}`}>
+              {progress > 0 ? "Continuar" : "Comenzar"}
+            </Link>
+          ) : (
+            "Próximamente"
+          )}
         </Button>
       </CardContent>
 

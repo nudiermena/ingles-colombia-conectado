@@ -13,23 +13,23 @@ const Header = () => {
         </div>
         
         <nav className="hidden md:flex items-center gap-6">
-          <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/lecciones" className="text-muted-foreground hover:text-foreground transition-colors">
             Lecciones
-          </a>
-          <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+          </Link>
+          <Link to="/progreso" className="text-muted-foreground hover:text-foreground transition-colors">
             Mi Progreso
-          </a>
-          <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+          </Link>
+          <Link to="/certificados" className="text-muted-foreground hover:text-foreground transition-colors">
             Certificados
-          </a>
+          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="hidden md:flex">
-            Iniciar Sesión
+          <Button variant="ghost" size="sm" className="hidden md:flex" asChild>
+            <Link to="/login">Iniciar Sesión</Link>
           </Button>
-          <Button variant="hero" size="sm">
-            Comenzar Gratis
+          <Button variant="hero" size="sm" asChild>
+            <Link to="/signup">Comenzar Gratis</Link>
           </Button>
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="w-5 h-5" />
