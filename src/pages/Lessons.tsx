@@ -18,7 +18,8 @@ const lessons = [
     difficulty: "Básico",
     rating: 4.8,
     completed: true,
-    type: "Vocabulario"
+    type: "Vocabulario",
+    progress: 100
   },
   {
     id: 2,
@@ -29,7 +30,8 @@ const lessons = [
     difficulty: "Básico",
     rating: 4.9,
     completed: true,
-    type: "Gramática"
+    type: "Gramática",
+    progress: 100
   },
   {
     id: 3,
@@ -40,7 +42,8 @@ const lessons = [
     difficulty: "Básico",
     rating: 4.7,
     completed: false,
-    type: "Vocabulario"
+    type: "Vocabulario",
+    progress: 65
   },
   {
     id: 4,
@@ -51,10 +54,47 @@ const lessons = [
     difficulty: "Básico", 
     rating: 4.6,
     completed: false,
-    type: "Gramática"
+    type: "Gramática",
+    progress: 0
   },
   {
     id: 5,
+    title: "Los Colores y Objetos",
+    description: "Identifica colores y objetos comunes en inglés",
+    level: "A1",
+    duration: "14 min",
+    difficulty: "Básico",
+    rating: 4.5,
+    completed: true,
+    type: "Vocabulario",
+    progress: 100
+  },
+  {
+    id: 6,
+    title: "Días de la Semana y Meses",
+    description: "Aprende el calendario en inglés",
+    level: "A1",
+    duration: "16 min",
+    difficulty: "Básico",
+    rating: 4.8,
+    completed: false,
+    type: "Vocabulario",
+    progress: 30
+  },
+  {
+    id: 7,
+    title: "Comida y Bebidas",
+    description: "Vocabulario de alimentos para pedir en restaurantes",
+    level: "A1",
+    duration: "22 min",
+    difficulty: "Básico",
+    rating: 4.7,
+    completed: false,
+    type: "Vocabulario",
+    progress: 0
+  },
+  {
+    id: 8,
     title: "Describing People",
     description: "Describe personas físicamente y su personalidad",
     level: "A2",
@@ -62,10 +102,59 @@ const lessons = [
     difficulty: "Intermedio",
     rating: 4.8,
     completed: false,
-    type: "Conversación"
+    type: "Conversación",
+    progress: 0
   },
   {
-    id: 6,
+    id: 9,
+    title: "Simple Past - Regular Verbs",
+    description: "Aprende el pasado simple con verbos regulares",
+    level: "A2",
+    duration: "28 min",
+    difficulty: "Intermedio",
+    rating: 4.6,
+    completed: false,
+    type: "Gramática",
+    progress: 0
+  },
+  {
+    id: 10,
+    title: "Shopping and Money",
+    description: "Vocabulario para ir de compras y manejar dinero",
+    level: "A2",
+    duration: "24 min",
+    difficulty: "Intermedio",
+    rating: 4.7,
+    completed: false,
+    type: "Conversación",
+    progress: 0
+  },
+  {
+    id: 11,
+    title: "Future Plans with 'Going to'",
+    description: "Expresa planes futuros usando 'going to'",
+    level: "A2",
+    duration: "26 min",
+    difficulty: "Intermedio",
+    rating: 4.8,
+    completed: false,
+    type: "Gramática",
+    progress: 0
+  },
+  {
+    id: 12,
+    title: "Travel and Transportation",
+    description: "Vocabulario esencial para viajar",
+    level: "A2",
+    duration: "30 min",
+    difficulty: "Intermedio",
+    rating: 4.9,
+    completed: false,
+    type: "Conversación",
+    progress: 0
+  },
+  {
+    id: 13,
     title: "Past Tense Stories", 
     description: "Cuenta historias usando el pasado simple",
     level: "B1",
@@ -73,7 +162,32 @@ const lessons = [
     difficulty: "Avanzado",
     rating: 4.9,
     completed: false,
-    type: "Conversación"
+    type: "Conversación",
+    progress: 0
+  },
+  {
+    id: 14,
+    title: "Present Perfect vs Simple Past",
+    description: "Diferencias entre presente perfecto y pasado simple",
+    level: "B1",
+    duration: "35 min",
+    difficulty: "Avanzado",
+    rating: 4.8,
+    completed: false,
+    type: "Gramática",
+    progress: 0
+  },
+  {
+    id: 15,
+    title: "Job Interviews in English",
+    description: "Prepárate para entrevistas de trabajo en inglés",
+    level: "B1",
+    duration: "40 min",
+    difficulty: "Avanzado",
+    rating: 4.7,
+    completed: false,
+    type: "Conversación",
+    progress: 0
   }
 ];
 
@@ -167,6 +281,21 @@ const Lessons = () => {
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {lesson.description}
                 </p>
+                
+                {lesson.progress > 0 && lesson.progress < 100 && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">Progreso</span>
+                      <span className="font-medium">{lesson.progress}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2">
+                      <div 
+                        className="bg-gradient-primary h-2 rounded-full transition-all duration-300" 
+                        style={{ width: `${lesson.progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">

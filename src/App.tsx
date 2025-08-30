@@ -13,6 +13,7 @@ import Demo from "./pages/Demo";
 import LevelA1 from "./pages/LevelA1";
 import LevelA2 from "./pages/LevelA2";
 import LevelB1 from "./pages/LevelB1";
+import LessonDetail from "./pages/LessonDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/nivel/a1" element={<LevelA1 />} />
           <Route path="/nivel/a2" element={<LevelA2 />} />
           <Route path="/nivel/b1" element={<LevelB1 />} />
+          <Route path="/leccion/:id" element={<LessonDetail />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
