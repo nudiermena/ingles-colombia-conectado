@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, User, Menu } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
