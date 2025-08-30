@@ -8,8 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Learning App Color Palette */
-    --background: 245 245 250;
+    --background: 240 10% 98%;
     --foreground: 225 15% 15%;
 
     --card: 0 0% 100%;
