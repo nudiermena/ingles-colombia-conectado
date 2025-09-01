@@ -14,6 +14,9 @@ import LevelA1 from "./pages/LevelA1";
 import LevelA2 from "./pages/LevelA2";
 import LevelB1 from "./pages/LevelB1";
 import LessonDetail from "./pages/LessonDetail";
+import ForgotPassword from "./pages/ForgotPassword";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +39,9 @@ const App = () => (
           <Route path="/nivel/a2" element={<LevelA2 />} />
           <Route path="/nivel/b1" element={<LevelB1 />} />
           <Route path="/leccion/:id" element={<LessonDetail />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

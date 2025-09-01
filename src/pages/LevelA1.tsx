@@ -215,16 +215,21 @@ const LevelA1 = () => {
                         }
                         disabled={lesson.locked}
                         className="group-hover:scale-105 transition-transform"
+                        asChild={!lesson.locked}
                       >
-                        {lesson.completed ? (
-                          "Repasar"
-                        ) : lesson.locked ? (
+                        {lesson.locked ? (
                           "Bloqueado"
                         ) : (
-                          <>
-                            <Play className="w-4 h-4 mr-2" />
-                            Comenzar
-                          </>
+                          <Link to={`/leccion/${lesson.id}`}>
+                            {lesson.completed ? (
+                              "Repasar"
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 mr-2" />
+                                Comenzar
+                              </>
+                            )}
+                          </Link>
                         )}
                       </Button>
                     </div>
