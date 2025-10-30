@@ -19,54 +19,86 @@ import {
   Award
 } from "lucide-react";
 
-const lessons = [
-  {
-    id: 1,
-    title: "Saludos y Presentaciones",
-    description: "Aprende a saludar y presentarte en inglés de manera natural",
-    level: "A1",
-    duration: "15 min",
-    difficulty: "Básico",
-    rating: 4.8,
-    completed: true,
-    type: "Vocabulario",
-    progress: 100,
-    objectives: [
-      "Saludar de manera formal e informal",
-      "Presentarte con tu nombre y edad", 
-      "Preguntar y responder sobre el origen",
-      "Usar expresiones de cortesía básicas"
-    ],
+const lessonsData: Record<number, any> = {
+  1: {
+    id: 1, title: "Saludos y Despedidas", level: "A1", duration: "15 min", difficulty: "Básico", rating: 4.8, type: "Vocabulario",
+    objectives: ["Saludar de manera formal e informal", "Presentarte con tu nombre y edad", "Preguntar y responder sobre el origen", "Usar expresiones de cortesía básicas"],
     content: {
       vocabulary: [
         { english: "Hello", spanish: "Hola", pronunciation: "/həˈloʊ/" },
         { english: "Good morning", spanish: "Buenos días", pronunciation: "/ɡʊd ˈmɔrnɪŋ/" },
+        { english: "Good afternoon", spanish: "Buenas tardes", pronunciation: "/ɡʊd ˌæftərˈnun/" },
+        { english: "Good evening", spanish: "Buenas noches", pronunciation: "/ɡʊd ˈivnɪŋ/" },
         { english: "My name is...", spanish: "Mi nombre es...", pronunciation: "/maɪ neɪm ɪz/" },
         { english: "Nice to meet you", spanish: "Mucho gusto", pronunciation: "/naɪs tu mit ju/" },
+        { english: "How are you?", spanish: "¿Cómo estás?", pronunciation: "/haʊ ɑr ju/" },
+        { english: "I'm fine, thank you", spanish: "Estoy bien, gracias", pronunciation: "/aɪm faɪn θæŋk ju/" },
         { english: "Where are you from?", spanish: "¿De dónde eres?", pronunciation: "/wɛr ɑr ju frəm/" },
-        { english: "I am from Colombia", spanish: "Soy de Colombia", pronunciation: "/aɪ æm frəm kəˈlʌmbiə/" }
+        { english: "I am from Colombia", spanish: "Soy de Colombia", pronunciation: "/aɪ æm frəm kəˈlʌmbiə/" },
+        { english: "Goodbye", spanish: "Adiós", pronunciation: "/ɡʊdˈbaɪ/" },
+        { english: "See you later", spanish: "Hasta luego", pronunciation: "/si ju ˈleɪtər/" }
       ],
       exercises: [
-        {
-          type: "multiple-choice",
-          question: "¿Cómo dices 'Mucho gusto' en inglés?",
-          options: ["Nice to meet you", "How are you?", "Good morning", "See you later"],
-          correct: 0
-        },
-        {
-          type: "fill-blank",
-          question: "Complete: 'My _____ is María'",
-          answer: "name"
-        },
-        {
-          type: "pronunciation",
-          word: "Hello",
-          pronunciation: "/həˈloʊ/"
-        }
+        { type: "multiple-choice", question: "¿Cómo dices 'Mucho gusto' en inglés?", options: ["Nice to meet you", "How are you?", "Good morning", "See you later"], correct: 0 },
+        { type: "multiple-choice", question: "¿Cuál es la respuesta correcta a 'How are you?'", options: ["My name is John", "I'm fine, thank you", "Goodbye", "Hello"], correct: 1 },
+        { type: "fill-blank", question: "Complete: 'My _____ is María'", answer: "name" },
+        { type: "fill-blank", question: "Complete: 'Where are you _____?'", answer: "from" },
+        { type: "pronunciation", word: "Hello", pronunciation: "/həˈloʊ/" },
+        { type: "pronunciation", word: "Goodbye", pronunciation: "/ɡʊdˈbaɪ/" }
+      ]
+    }
+  },
+  2: {
+    id: 2, title: "El Alfabeto en Inglés", level: "A1", duration: "10 min", difficulty: "Básico", rating: 4.9, type: "Pronunciación",
+    objectives: ["Pronunciar correctamente las 26 letras", "Deletrear palabras básicas", "Entender deletreos", "Practicar con nombres propios"],
+    content: {
+      vocabulary: [
+        { english: "A - Apple", spanish: "A - Manzana", pronunciation: "/eɪ/" },
+        { english: "B - Ball", spanish: "B - Pelota", pronunciation: "/bi/" },
+        { english: "C - Cat", spanish: "C - Gato", pronunciation: "/si/" },
+        { english: "D - Dog", spanish: "D - Perro", pronunciation: "/di/" },
+        { english: "E - Egg", spanish: "E - Huevo", pronunciation: "/i/" },
+        { english: "F - Fish", spanish: "F - Pez", pronunciation: "/ɛf/" },
+        { english: "G - Girl", spanish: "G - Niña", pronunciation: "/dʒi/" },
+        { english: "H - House", spanish: "H - Casa", pronunciation: "/eɪtʃ/" },
+        { english: "I - Ice cream", spanish: "I - Helado", pronunciation: "/aɪ/" },
+        { english: "J - Juice", spanish: "J - Jugo", pronunciation: "/dʒeɪ/" }
+      ],
+      exercises: [
+        { type: "multiple-choice", question: "¿Cómo se pronuncia la letra 'A'?", options: ["/eɪ/", "/a/", "/æ/", "/ɑ/"], correct: 0 },
+        { type: "fill-blank", question: "Spell 'CAT': C - _____ - T", answer: "A" },
+        { type: "pronunciation", word: "Alphabet", pronunciation: "/ˈælfəˌbɛt/" }
+      ]
+    }
+  },
+  3: {
+    id: 3, title: "Números del 1 al 20", level: "A1", duration: "12 min", difficulty: "Básico", rating: 4.7, type: "Vocabulario",
+    objectives: ["Contar del 1 al 20", "Decir tu edad", "Preguntar cantidades", "Usar números en contexto"],
+    content: {
+      vocabulary: [
+        { english: "One", spanish: "Uno", pronunciation: "/wʌn/" },
+        { english: "Two", spanish: "Dos", pronunciation: "/tu/" },
+        { english: "Three", spanish: "Tres", pronunciation: "/θri/" },
+        { english: "Four", spanish: "Cuatro", pronunciation: "/fɔr/" },
+        { english: "Five", spanish: "Cinco", pronunciation: "/faɪv/" },
+        { english: "Six", spanish: "Seis", pronunciation: "/sɪks/" },
+        { english: "Seven", spanish: "Siete", pronunciation: "/ˈsɛvən/" },
+        { english: "Eight", spanish: "Ocho", pronunciation: "/eɪt/" },
+        { english: "Nine", spanish: "Nueve", pronunciation: "/naɪn/" },
+        { english: "Ten", spanish: "Diez", pronunciation: "/tɛn/" },
+        { english: "Eleven", spanish: "Once", pronunciation: "/ɪˈlɛvən/" },
+        { english: "Twelve", spanish: "Doce", pronunciation: "/twɛlv/" },
+        { english: "How old are you?", spanish: "¿Cuántos años tienes?", pronunciation: "/haʊ oʊld ɑr ju/" },
+        { english: "I am 25 years old", spanish: "Tengo 25 años", pronunciation: "/aɪ æm ˈtwɛnti faɪv jɪrz oʊld/" }
+      ],
+      exercises: [
+        { type: "multiple-choice", question: "¿Cómo se escribe el número 7?", options: ["Six", "Seven", "Eight", "Nine"], correct: 1 },
+        { type: "fill-blank", question: "5 + 5 = _____", answer: "ten" },
+        { type: "pronunciation", word: "Fifteen", pronunciation: "/ˌfɪfˈtin/" }
       ]
     }
   }
-];
+};
 
 const LessonDetail = () => {
   const { id } = useParams();
@@ -76,7 +108,8 @@ const LessonDetail = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [completedExercises, setCompletedExercises] = useState<number[]>([]);
 
-  const lesson = lessons.find(l => l.id === parseInt(id || "1"));
+  const lessonId = parseInt(id || "1");
+  const lesson = lessonsData[lessonId] || lessonsData[1];
   
   if (!lesson) {
     return <div>Lección no encontrada</div>;

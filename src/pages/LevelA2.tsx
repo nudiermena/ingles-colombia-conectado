@@ -20,60 +20,38 @@ import {
 } from "lucide-react";
 
 const lessons = [
-  {
-    id: 1,
-    title: "Past Simple - Introducción",
-    description: "Aprende a hablar sobre acciones pasadas",
-    duration: "25 min",
-    type: "Gramática",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 2,
-    title: "Describing People & Places",
-    description: "Vocabulario para describir personas y lugares",
-    duration: "20 min", 
-    type: "Vocabulario",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 3,
-    title: "Making Requests",
-    description: "Cómo hacer peticiones educadas en inglés",
-    duration: "18 min",
-    type: "Conversación",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 4,
-    title: "Time Expressions",
-    description: "Expresiones de tiempo para conversaciones",
-    duration: "15 min",
-    type: "Vocabulario",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 5,
-    title: "Future Plans - Going to",
-    description: "Habla sobre planes futuros usando 'going to'",
-    duration: "22 min",
-    type: "Gramática",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 6,
-    title: "Shopping & Money",
-    description: "Situaciones de compras y manejo de dinero",
-    duration: "28 min",
-    type: "Conversación",
-    completed: false,
-    locked: true
-  }
+  { id: 25, title: "Past Simple - Introducción", description: "Aprende a hablar sobre acciones pasadas", duration: "25 min", type: "Gramática", completed: false, locked: true },
+  { id: 26, title: "Irregular Verbs - Part 1", description: "Los 50 verbos irregulares más comunes", duration: "30 min", type: "Gramática", completed: false, locked: true },
+  { id: 27, title: "Describing People & Places", description: "Vocabulario para describir personas y lugares", duration: "20 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 28, title: "Making Requests", description: "Cómo hacer peticiones educadas en inglés", duration: "18 min", type: "Conversación", completed: false, locked: true },
+  { id: 29, title: "Time Expressions", description: "Expresiones de tiempo para conversaciones", duration: "15 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 30, title: "Future Plans - Going to", description: "Habla sobre planes futuros usando 'going to'", duration: "22 min", type: "Gramática", completed: false, locked: true },
+  { id: 31, title: "Shopping & Money", description: "Situaciones de compras y manejo de dinero", duration: "28 min", type: "Conversación", completed: false, locked: true },
+  { id: 32, title: "Comparatives & Superlatives", description: "Bigger, the biggest - Comparar cosas", duration: "26 min", type: "Gramática", completed: false, locked: true },
+  { id: 33, title: "Health & Body", description: "Habla sobre salud y síntomas", duration: "20 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 34, title: "At the Doctor", description: "Conversación médica básica", duration: "24 min", type: "Conversación", completed: false, locked: true },
+  { id: 35, title: "Technology & Internet", description: "Vocabulario tecnológico moderno", duration: "18 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 36, title: "Modal Verbs - Can/Could", description: "Habilidades y posibilidades", duration: "25 min", type: "Gramática", completed: false, locked: true },
+  { id: 37, title: "Transportation", description: "Medios de transporte y viajes", duration: "17 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 38, title: "At the Airport", description: "Check-in, boarding, customs", duration: "22 min", type: "Conversación", completed: false, locked: true },
+  { id: 39, title: "Hobbies & Interests", description: "Habla sobre tus pasatiempos favoritos", duration: "19 min", type: "Conversación", completed: false, locked: true },
+  { id: 40, title: "Past Continuous", description: "Acciones en progreso en el pasado", duration: "27 min", type: "Gramática", completed: false, locked: true },
+  { id: 41, title: "Work & Occupations", description: "Profesiones y lugares de trabajo", duration: "20 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 42, title: "Job Interview Basics", description: "Preguntas comunes de entrevistas", duration: "25 min", type: "Conversación", completed: false, locked: true },
+  { id: 43, title: "Irregular Verbs - Part 2", description: "Más verbos irregulares importantes", duration: "28 min", type: "Gramática", completed: false, locked: true },
+  { id: 44, title: "Adverbs of Frequency", description: "Always, often, sometimes, never", duration: "16 min", type: "Gramática", completed: false, locked: true },
+  { id: 45, title: "Sports & Activities", description: "Play, do, go + deportes", duration: "18 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 46, title: "Making Suggestions", description: "Let's, Why don't we, How about", duration: "21 min", type: "Conversación", completed: false, locked: true },
+  { id: 47, title: "Prepositions of Time", description: "In, on, at para expresar tiempo", duration: "19 min", type: "Gramática", completed: false, locked: true },
+  { id: 48, title: "Weather & Climate", description: "Descripciones detalladas del clima", duration: "17 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 49, title: "Email Writing Basics", description: "Estructura de correos formales", duration: "24 min", type: "Escritura", completed: false, locked: true },
+  { id: 50, title: "Modal Verbs - Should/Must", description: "Consejos y obligaciones", duration: "26 min", type: "Gramática", completed: false, locked: true },
+  { id: 51, title: "Emotions & Feelings", description: "Expresar sentimientos y emociones", duration: "18 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 52, title: "Social Events", description: "Invitaciones y celebraciones", duration: "22 min", type: "Conversación", completed: false, locked: true },
+  { id: 53, title: "Present Perfect - Introduction", description: "Introducción al presente perfecto", duration: "30 min", type: "Gramática", completed: false, locked: true },
+  { id: 54, title: "Environmental Issues", description: "Vocabulario sobre el medio ambiente", duration: "20 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 55, title: "Giving Directions Advanced", description: "Direcciones más complejas", duration: "23 min", type: "Conversación", completed: false, locked: true },
+  { id: 56, title: "Repaso Final A2", description: "Evaluación integral del nivel A2", duration: "35 min", type: "Evaluación", completed: false, locked: true }
 ];
 
 const skills = [

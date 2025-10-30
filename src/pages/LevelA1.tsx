@@ -20,60 +20,30 @@ import {
 } from "lucide-react";
 
 const lessons = [
-  {
-    id: 1,
-    title: "Saludos y Despedidas",
-    description: "Aprende las formas básicas de saludar y despedirte",
-    duration: "15 min",
-    type: "Vocabulario",
-    completed: false,
-    locked: false
-  },
-  {
-    id: 2,
-    title: "El Alfabeto en Inglés",
-    description: "Domina la pronunciación del alfabeto inglés",
-    duration: "10 min", 
-    type: "Pronunciación",
-    completed: false,
-    locked: false
-  },
-  {
-    id: 3,
-    title: "Números del 1 al 20",
-    description: "Aprende a contar en inglés del 1 al 20",
-    duration: "12 min",
-    type: "Vocabulario", 
-    completed: false,
-    locked: false
-  },
-  {
-    id: 4,
-    title: "Colores Básicos",
-    description: "Vocabulario esencial de colores en inglés",
-    duration: "8 min",
-    type: "Vocabulario",
-    completed: false,
-    locked: false
-  },
-  {
-    id: 5,
-    title: "Pronombres Personales",
-    description: "I, you, he, she, it, we, they",
-    duration: "20 min",
-    type: "Gramática",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 6,
-    title: "Verbo 'To Be' - Presente",
-    description: "Estructura básica del verbo ser/estar",
-    duration: "25 min",
-    type: "Gramática",
-    completed: false,
-    locked: true
-  }
+  { id: 1, title: "Saludos y Despedidas", description: "Aprende las formas básicas de saludar y despedirte", duration: "15 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 2, title: "El Alfabeto en Inglés", description: "Domina la pronunciación del alfabeto inglés", duration: "10 min", type: "Pronunciación", completed: false, locked: false },
+  { id: 3, title: "Números del 1 al 20", description: "Aprende a contar en inglés del 1 al 20", duration: "12 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 4, title: "Colores Básicos", description: "Vocabulario esencial de colores en inglés", duration: "8 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 5, title: "Pronombres Personales", description: "I, you, he, she, it, we, they", duration: "20 min", type: "Gramática", completed: false, locked: false },
+  { id: 6, title: "Verbo 'To Be' - Presente", description: "Estructura básica del verbo ser/estar", duration: "25 min", type: "Gramática", completed: false, locked: false },
+  { id: 7, title: "Días de la Semana", description: "Monday to Sunday - Vocabulario de días", duration: "10 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 8, title: "La Familia", description: "Vocabulario para hablar de tu familia", duration: "18 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 9, title: "Meses del Año", description: "January to December - Los 12 meses", duration: "12 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 10, title: "Adjetivos Básicos", description: "Describe personas, lugares y cosas", duration: "20 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 11, title: "Artículos: A, An, The", description: "Cuándo y cómo usar artículos en inglés", duration: "22 min", type: "Gramática", completed: false, locked: false },
+  { id: 12, title: "Preguntas con WH", description: "What, Where, When, Who, Why, How", duration: "25 min", type: "Gramática", completed: false, locked: false },
+  { id: 13, title: "El Clima y las Estaciones", description: "Habla sobre el tiempo y las estaciones", duration: "15 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 14, title: "Comida y Bebidas", description: "Vocabulario esencial de alimentos", duration: "18 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 15, title: "En el Restaurante", description: "Frases útiles para ordenar comida", duration: "20 min", type: "Conversación", completed: false, locked: false },
+  { id: 16, title: "Las Partes del Cuerpo", description: "Head, shoulders, knees and toes...", duration: "14 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 17, title: "Presente Simple", description: "Rutinas y acciones habituales", duration: "28 min", type: "Gramática", completed: false, locked: false },
+  { id: 18, title: "La Hora en Inglés", description: "Aprende a decir y preguntar la hora", duration: "16 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 19, title: "Lugares en la Ciudad", description: "Bank, hospital, supermarket, etc.", duration: "17 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 20, title: "Direcciones Básicas", description: "Turn left, go straight, turn right", duration: "19 min", type: "Conversación", completed: false, locked: false },
+  { id: 21, title: "La Ropa", description: "Vocabulario de prendas de vestir", duration: "15 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 22, title: "Hobbies y Pasatiempos", description: "I like/love/enjoy + actividades", duration: "20 min", type: "Conversación", completed: false, locked: false },
+  { id: 23, title: "En la Casa", description: "Habitaciones y muebles del hogar", duration: "18 min", type: "Vocabulario", completed: false, locked: false },
+  { id: 24, title: "Repaso Final A1", description: "Ejercicios integradores del nivel", duration: "30 min", type: "Evaluación", completed: false, locked: false }
 ];
 
 const skills = [

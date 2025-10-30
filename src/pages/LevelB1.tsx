@@ -20,78 +20,46 @@ import {
 } from "lucide-react";
 
 const lessons = [
-  {
-    id: 1,
-    title: "Expressing Opinions",
-    description: "Aprende a expresar y defender tus opiniones",
-    duration: "30 min",
-    type: "Conversación",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 2,
-    title: "Travel & Tourism",
-    description: "Vocabulario y situaciones de viaje",
-    duration: "28 min", 
-    type: "Vocabulario",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 3,
-    title: "Present Perfect",
-    description: "Domina el presente perfecto y sus usos",
-    duration: "35 min",
-    type: "Gramática",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 4,
-    title: "Job Interviews",
-    description: "Prepárate para entrevistas laborales en inglés",
-    duration: "40 min",
-    type: "Conversación",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 5,
-    title: "Describing Experiences",
-    description: "Cuenta experiencias pasadas con detalle",
-    duration: "25 min",
-    type: "Conversación",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 6,
-    title: "Conditional Sentences",
-    description: "Situaciones hipotéticas y condicionales",
-    duration: "38 min",
-    type: "Gramática",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 7,
-    title: "Academic Writing Basics",
-    description: "Fundamentos de escritura académica",
-    duration: "45 min",
-    type: "Escritura",
-    completed: false,
-    locked: true
-  },
-  {
-    id: 8,
-    title: "Debate & Discussion",
-    description: "Participa en debates y discusiones",
-    duration: "50 min",
-    type: "Conversación",
-    completed: false,
-    locked: true
-  }
+  { id: 57, title: "Expressing Opinions", description: "Aprende a expresar y defender tus opiniones", duration: "30 min", type: "Conversación", completed: false, locked: true },
+  { id: 58, title: "Travel & Tourism", description: "Vocabulario y situaciones de viaje", duration: "28 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 59, title: "Present Perfect Continuous", description: "Domina el presente perfecto continuo", duration: "35 min", type: "Gramática", completed: false, locked: true },
+  { id: 60, title: "Job Interviews Advanced", description: "Prepárate para entrevistas laborales profesionales", duration: "40 min", type: "Conversación", completed: false, locked: true },
+  { id: 61, title: "Describing Experiences", description: "Cuenta experiencias pasadas con detalle", duration: "25 min", type: "Conversación", completed: false, locked: true },
+  { id: 62, title: "First Conditional", description: "Real possibilities in the future", duration: "32 min", type: "Gramática", completed: false, locked: true },
+  { id: 63, title: "Second Conditional", description: "Unreal or hypothetical situations", duration: "34 min", type: "Gramática", completed: false, locked: true },
+  { id: 64, title: "Third Conditional", description: "Unreal past situations", duration: "36 min", type: "Gramática", completed: false, locked: true },
+  { id: 65, title: "Academic Writing Basics", description: "Fundamentos de escritura académica", duration: "45 min", type: "Escritura", completed: false, locked: true },
+  { id: 66, title: "Essay Structure", description: "Cómo estructurar un ensayo académico", duration: "40 min", type: "Escritura", completed: false, locked: true },
+  { id: 67, title: "Debate & Discussion", description: "Participa en debates y discusiones", duration: "50 min", type: "Conversación", completed: false, locked: true },
+  { id: 68, title: "Business English Basics", description: "Inglés para negocios y oficina", duration: "35 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 69, title: "Passive Voice", description: "Construcción y uso de la voz pasiva", duration: "38 min", type: "Gramática", completed: false, locked: true },
+  { id: 70, title: "Reported Speech", description: "Discurso indirecto y reportado", duration: "42 min", type: "Gramática", completed: false, locked: true },
+  { id: 71, title: "Phrasal Verbs - Part 1", description: "Los phrasal verbs más comunes", duration: "30 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 72, title: "Phrasal Verbs - Part 2", description: "Phrasal verbs avanzados", duration: "32 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 73, title: "Idioms & Expressions", description: "Modismos y expresiones idiomáticas", duration: "28 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 74, title: "Presentations Skills", description: "Cómo dar presentaciones en inglés", duration: "45 min", type: "Conversación", completed: false, locked: true },
+  { id: 75, title: "Negotiations", description: "Técnicas de negociación en inglés", duration: "40 min", type: "Conversación", completed: false, locked: true },
+  { id: 76, title: "Relative Clauses", description: "Who, which, that, where, when", duration: "35 min", type: "Gramática", completed: false, locked: true },
+  { id: 77, title: "Advanced Listening", description: "Comprensión auditiva de nivel intermedio", duration: "30 min", type: "Comprensión", completed: false, locked: true },
+  { id: 78, title: "News & Media", description: "Vocabulario de noticias y medios", duration: "27 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 79, title: "Cultural Differences", description: "Comunicación intercultural", duration: "33 min", type: "Conversación", completed: false, locked: true },
+  { id: 80, title: "Creative Writing", description: "Escritura creativa en inglés", duration: "38 min", type: "Escritura", completed: false, locked: true },
+  { id: 81, title: "Scientific English", description: "Inglés técnico y científico", duration: "42 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 82, title: "Modal Verbs Review", description: "Repaso completo de verbos modales", duration: "36 min", type: "Gramática", completed: false, locked: true },
+  { id: 83, title: "Advanced Pronunciation", description: "Pronunciación de nivel intermedio", duration: "40 min", type: "Pronunciación", completed: false, locked: true },
+  { id: 84, title: "Film & Literature", description: "Vocabulario de cine y literatura", duration: "29 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 85, title: "Critical Thinking", description: "Análisis crítico en inglés", duration: "44 min", type: "Conversación", completed: false, locked: true },
+  { id: 86, title: "Future Forms Review", description: "Will, going to, present continuous", duration: "35 min", type: "Gramática", completed: false, locked: true },
+  { id: 87, title: "Conference Calls", description: "Reuniones virtuales en inglés", duration: "37 min", type: "Conversación", completed: false, locked: true },
+  { id: 88, title: "Email Etiquette", description: "Etiqueta profesional en correos", duration: "32 min", type: "Escritura", completed: false, locked: true },
+  { id: 89, title: "Collocations", description: "Combinaciones naturales de palabras", duration: "31 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 90, title: "Interview Techniques", description: "Técnicas avanzadas de entrevista", duration: "43 min", type: "Conversación", completed: false, locked: true },
+  { id: 91, title: "Complex Sentences", description: "Construcción de oraciones complejas", duration: "39 min", type: "Gramática", completed: false, locked: true },
+  { id: 92, title: "Abstract Vocabulary", description: "Vocabulario abstracto y conceptual", duration: "34 min", type: "Vocabulario", completed: false, locked: true },
+  { id: 93, title: "Storytelling", description: "Técnicas narrativas en inglés", duration: "41 min", type: "Conversación", completed: false, locked: true },
+  { id: 94, title: "Research Writing", description: "Escritura de investigación académica", duration: "48 min", type: "Escritura", completed: false, locked: true },
+  { id: 95, title: "IELTS Preparation", description: "Introducción al examen IELTS", duration: "50 min", type: "Evaluación", completed: false, locked: true },
+  { id: 96, title: "Repaso Final B1", description: "Evaluación integral nivel intermedio", duration: "60 min", type: "Evaluación", completed: false, locked: true }
 ];
 
 const skills = [
