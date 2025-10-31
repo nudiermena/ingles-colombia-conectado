@@ -7,189 +7,21 @@ import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Search, Filter, Play, Clock, Star, ChevronRight, BookOpen } from "lucide-react";
+import { lessonsData } from "@/data/lessonsData";
 
-const lessons = [
-  {
-    id: 1,
-    title: "Saludos y Presentaciones",
-    description: "Aprende a saludar y presentarte en inglés de manera natural",
-    level: "A1",
-    duration: "15 min",
-    difficulty: "Básico",
-    rating: 4.8,
-    completed: true,
-    type: "Vocabulario",
-    progress: 100
-  },
-  {
-    id: 2,
-    title: "Números del 1 al 100",
-    description: "Domina los números en inglés para situaciones cotidianas",
-    level: "A1", 
-    duration: "12 min",
-    difficulty: "Básico",
-    rating: 4.9,
-    completed: true,
-    type: "Gramática",
-    progress: 100
-  },
-  {
-    id: 3,
-    title: "La Familia en Inglés",
-    description: "Vocabulario esencial para hablar sobre tu familia",
-    level: "A1",
-    duration: "18 min", 
-    difficulty: "Básico",
-    rating: 4.7,
-    completed: false,
-    type: "Vocabulario",
-    progress: 65
-  },
-  {
-    id: 4,
-    title: "Present Simple - Estructura",
-    description: "Aprende la estructura básica del presente simple",
-    level: "A1",
-    duration: "20 min",
-    difficulty: "Básico", 
-    rating: 4.6,
-    completed: false,
-    type: "Gramática",
-    progress: 0
-  },
-  {
-    id: 5,
-    title: "Los Colores y Objetos",
-    description: "Identifica colores y objetos comunes en inglés",
-    level: "A1",
-    duration: "14 min",
-    difficulty: "Básico",
-    rating: 4.5,
-    completed: true,
-    type: "Vocabulario",
-    progress: 100
-  },
-  {
-    id: 6,
-    title: "Días de la Semana y Meses",
-    description: "Aprende el calendario en inglés",
-    level: "A1",
-    duration: "16 min",
-    difficulty: "Básico",
-    rating: 4.8,
-    completed: false,
-    type: "Vocabulario",
-    progress: 30
-  },
-  {
-    id: 7,
-    title: "Comida y Bebidas",
-    description: "Vocabulario de alimentos para pedir en restaurantes",
-    level: "A1",
-    duration: "22 min",
-    difficulty: "Básico",
-    rating: 4.7,
-    completed: false,
-    type: "Vocabulario",
-    progress: 0
-  },
-  {
-    id: 8,
-    title: "Describing People",
-    description: "Describe personas físicamente y su personalidad",
-    level: "A2",
-    duration: "25 min",
-    difficulty: "Intermedio",
-    rating: 4.8,
-    completed: false,
-    type: "Conversación",
-    progress: 0
-  },
-  {
-    id: 9,
-    title: "Simple Past - Regular Verbs",
-    description: "Aprende el pasado simple con verbos regulares",
-    level: "A2",
-    duration: "28 min",
-    difficulty: "Intermedio",
-    rating: 4.6,
-    completed: false,
-    type: "Gramática",
-    progress: 0
-  },
-  {
-    id: 10,
-    title: "Shopping and Money",
-    description: "Vocabulario para ir de compras y manejar dinero",
-    level: "A2",
-    duration: "24 min",
-    difficulty: "Intermedio",
-    rating: 4.7,
-    completed: false,
-    type: "Conversación",
-    progress: 0
-  },
-  {
-    id: 11,
-    title: "Future Plans with 'Going to'",
-    description: "Expresa planes futuros usando 'going to'",
-    level: "A2",
-    duration: "26 min",
-    difficulty: "Intermedio",
-    rating: 4.8,
-    completed: false,
-    type: "Gramática",
-    progress: 0
-  },
-  {
-    id: 12,
-    title: "Travel and Transportation",
-    description: "Vocabulario esencial para viajar",
-    level: "A2",
-    duration: "30 min",
-    difficulty: "Intermedio",
-    rating: 4.9,
-    completed: false,
-    type: "Conversación",
-    progress: 0
-  },
-  {
-    id: 13,
-    title: "Past Tense Stories", 
-    description: "Cuenta historias usando el pasado simple",
-    level: "B1",
-    duration: "30 min",
-    difficulty: "Avanzado",
-    rating: 4.9,
-    completed: false,
-    type: "Conversación",
-    progress: 0
-  },
-  {
-    id: 14,
-    title: "Present Perfect vs Simple Past",
-    description: "Diferencias entre presente perfecto y pasado simple",
-    level: "B1",
-    duration: "35 min",
-    difficulty: "Avanzado",
-    rating: 4.8,
-    completed: false,
-    type: "Gramática",
-    progress: 0
-  },
-  {
-    id: 15,
-    title: "Job Interviews in English",
-    description: "Prepárate para entrevistas de trabajo en inglés",
-    level: "B1",
-    duration: "40 min",
-    difficulty: "Avanzado",
-    rating: 4.7,
-    completed: false,
-    type: "Conversación",
-    progress: 0
-  }
-];
+// Convert lessonsData to lessons array format
+const lessons = Object.values(lessonsData).map((lesson, index) => ({
+  id: lesson.id,
+  title: lesson.title,
+  description: lesson.objectives?.[0] || "Lección de inglés",
+  level: lesson.level,
+  duration: lesson.duration,
+  difficulty: lesson.difficulty,
+  rating: lesson.rating,
+  completed: index < 3, // Mark first 3 as completed for demo
+  type: lesson.type,
+  progress: index < 3 ? 100 : index < 5 ? 65 : 0
+}));
 
 const Lessons = () => {
   const [searchTerm, setSearchTerm] = useState("");
