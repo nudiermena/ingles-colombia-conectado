@@ -6,20 +6,32 @@ export const lessonsData: Record<number, any> = {
     content: {
       vocabulary: [
         { english: "Hello", spanish: "Hola", pronunciation: "/həˈloʊ/" },
+        { english: "Hi", spanish: "Hola (informal)", pronunciation: "/haɪ/" },
         { english: "Good morning", spanish: "Buenos días", pronunciation: "/ɡʊd ˈmɔrnɪŋ/" },
         { english: "Good afternoon", spanish: "Buenas tardes", pronunciation: "/ɡʊd ˌæftərˈnun/" },
         { english: "Good evening", spanish: "Buenas noches", pronunciation: "/ɡʊd ˈivnɪŋ/" },
+        { english: "Good night", spanish: "Buenas noches (despedida)", pronunciation: "/ɡʊd naɪt/" },
         { english: "My name is", spanish: "Mi nombre es", pronunciation: "/maɪ neɪm ɪz/" },
+        { english: "What's your name?", spanish: "¿Cómo te llamas?", pronunciation: "/wʌts jʊr neɪm/" },
         { english: "Nice to meet you", spanish: "Mucho gusto", pronunciation: "/naɪs tu mit ju/" },
+        { english: "Pleased to meet you", spanish: "Encantado de conocerte", pronunciation: "/plizd tu mit ju/" },
         { english: "How are you?", spanish: "¿Cómo estás?", pronunciation: "/haʊ ɑr ju/" },
         { english: "I'm fine, thank you", spanish: "Estoy bien, gracias", pronunciation: "/aɪm faɪn θæŋk ju/" },
+        { english: "And you?", spanish: "¿Y tú?", pronunciation: "/ænd ju/" },
         { english: "Goodbye", spanish: "Adiós", pronunciation: "/ɡʊdˈbaɪ/" },
-        { english: "See you later", spanish: "Hasta luego", pronunciation: "/si ju ˈleɪtər/" }
+        { english: "Bye", spanish: "Adiós (informal)", pronunciation: "/baɪ/" },
+        { english: "See you later", spanish: "Hasta luego", pronunciation: "/si ju ˈleɪtər/" },
+        { english: "See you soon", spanish: "Hasta pronto", pronunciation: "/si ju sun/" },
+        { english: "Have a nice day", spanish: "Que tengas un buen día", pronunciation: "/hæv ə naɪs deɪ/" },
+        { english: "Take care", spanish: "Cuídate", pronunciation: "/teɪk kɛr/" }
       ],
       exercises: [
         { type: "multiple-choice", question: "¿Cómo dices 'Mucho gusto' en inglés?", options: ["Nice to meet you", "How are you?", "Good morning", "See you later"], correct: 0 },
         { type: "fill-blank", question: "Complete: 'My _____ is María'", answer: "name" },
-        { type: "pronunciation", word: "Hello", pronunciation: "/həˈloʊ/" }
+        { type: "multiple-choice", question: "¿Qué respondes a 'How are you?'", options: ["I'm fine, thank you", "My name is", "Goodbye", "Hello"], correct: 0 },
+        { type: "fill-blank", question: "Complete: 'See you _____' (después)", answer: "later" },
+        { type: "pronunciation", word: "Hello", pronunciation: "/həˈloʊ/" },
+        { type: "pronunciation", word: "Goodbye", pronunciation: "/ɡʊdˈbaɪ/" }
       ]
     }
   },
@@ -36,11 +48,32 @@ export const lessonsData: Record<number, any> = {
         { english: "E", spanish: "E", pronunciation: "/i/" },
         { english: "F", spanish: "F", pronunciation: "/ɛf/" },
         { english: "G", spanish: "G", pronunciation: "/dʒi/" },
-        { english: "H", spanish: "H", pronunciation: "/eɪtʃ/" }
+        { english: "H", spanish: "H", pronunciation: "/eɪtʃ/" },
+        { english: "I", spanish: "I", pronunciation: "/aɪ/" },
+        { english: "J", spanish: "J", pronunciation: "/dʒeɪ/" },
+        { english: "K", spanish: "K", pronunciation: "/keɪ/" },
+        { english: "L", spanish: "L", pronunciation: "/ɛl/" },
+        { english: "M", spanish: "M", pronunciation: "/ɛm/" },
+        { english: "N", spanish: "N", pronunciation: "/ɛn/" },
+        { english: "O", spanish: "O", pronunciation: "/oʊ/" },
+        { english: "P", spanish: "P", pronunciation: "/pi/" },
+        { english: "Q", spanish: "Q", pronunciation: "/kju/" },
+        { english: "R", spanish: "R", pronunciation: "/ɑr/" },
+        { english: "S", spanish: "S", pronunciation: "/ɛs/" },
+        { english: "T", spanish: "T", pronunciation: "/ti/" },
+        { english: "U", spanish: "U", pronunciation: "/ju/" },
+        { english: "V", spanish: "V", pronunciation: "/vi/" },
+        { english: "W", spanish: "W", pronunciation: "/ˈdʌbəlju/" },
+        { english: "X", spanish: "X", pronunciation: "/ɛks/" },
+        { english: "Y", spanish: "Y", pronunciation: "/waɪ/" },
+        { english: "Z", spanish: "Z", pronunciation: "/zi/" }
       ],
       exercises: [
         { type: "multiple-choice", question: "¿Cómo se pronuncia 'A'?", options: ["/eɪ/", "/a/", "/æ/", "/ɑ/"], correct: 0 },
-        { type: "pronunciation", word: "Alphabet", pronunciation: "/ˈælfəˌbɛt/" }
+        { type: "multiple-choice", question: "¿Cómo se pronuncia 'W'?", options: ["/ˈdʌbəlju/", "/wi/", "/waɪ/", "/vɛ/"], correct: 0 },
+        { type: "fill-blank", question: "La última letra del alfabeto es ___", answer: "Z" },
+        { type: "pronunciation", word: "Alphabet", pronunciation: "/ˈælfəˌbɛt/" },
+        { type: "pronunciation", word: "Spell", pronunciation: "/spɛl/" }
       ]
     }
   },
@@ -55,13 +88,28 @@ export const lessonsData: Record<number, any> = {
         { english: "Three", spanish: "Tres", pronunciation: "/θri/" },
         { english: "Four", spanish: "Cuatro", pronunciation: "/fɔr/" },
         { english: "Five", spanish: "Cinco", pronunciation: "/faɪv/" },
+        { english: "Six", spanish: "Seis", pronunciation: "/sɪks/" },
+        { english: "Seven", spanish: "Siete", pronunciation: "/ˈsɛvən/" },
+        { english: "Eight", spanish: "Ocho", pronunciation: "/eɪt/" },
+        { english: "Nine", spanish: "Nueve", pronunciation: "/naɪn/" },
         { english: "Ten", spanish: "Diez", pronunciation: "/tɛn/" },
+        { english: "Eleven", spanish: "Once", pronunciation: "/ɪˈlɛvən/" },
+        { english: "Twelve", spanish: "Doce", pronunciation: "/twɛlv/" },
+        { english: "Thirteen", spanish: "Trece", pronunciation: "/ˌθɜrˈtin/" },
+        { english: "Fourteen", spanish: "Catorce", pronunciation: "/ˌfɔrˈtin/" },
         { english: "Fifteen", spanish: "Quince", pronunciation: "/ˌfɪfˈtin/" },
+        { english: "Sixteen", spanish: "Dieciséis", pronunciation: "/ˌsɪksˈtin/" },
+        { english: "Seventeen", spanish: "Diecisiete", pronunciation: "/ˌsɛvənˈtin/" },
+        { english: "Eighteen", spanish: "Dieciocho", pronunciation: "/ˌeɪˈtin/" },
+        { english: "Nineteen", spanish: "Diecinueve", pronunciation: "/ˌnaɪnˈtin/" },
         { english: "Twenty", spanish: "Veinte", pronunciation: "/ˈtwɛnti/" }
       ],
       exercises: [
         { type: "multiple-choice", question: "¿Cómo se escribe 7?", options: ["Six", "Seven", "Eight", "Nine"], correct: 1 },
-        { type: "fill-blank", question: "5 + 5 = _____", answer: "ten" }
+        { type: "fill-blank", question: "5 + 5 = _____", answer: "ten" },
+        { type: "multiple-choice", question: "¿Qué número viene después de nineteen?", options: ["Eighteen", "Twenty", "Fifteen"], correct: 1 },
+        { type: "fill-blank", question: "12 - 2 = _____", answer: "ten" },
+        { type: "pronunciation", word: "Thirteen", pronunciation: "/ˌθɜrˈtin/" }
       ]
     }
   },
@@ -185,12 +233,78 @@ export const lessonsData: Record<number, any> = {
   },
 
   // Continue with remaining A1 lessons (9-24)...
-  9: { id: 9, title: "Describing People", level: "A1", duration: "20 min", difficulty: "Básico", rating: 4.8, type: "Vocabulario", objectives: ["Describir apariencia física", "Describir personalidad", "Usar adjetivos descriptivos", "Hablar de características"], content: { vocabulary: [{ english: "Tall", spanish: "Alto", pronunciation: "/tɔl/" }, { english: "Short", spanish: "Bajo", pronunciation: "/ʃɔrt/" }, { english: "Young", spanish: "Joven", pronunciation: "/jʌŋ/" }, { english: "Old", spanish: "Viejo", pronunciation: "/oʊld/" }, { english: "Friendly", spanish: "Amable", pronunciation: "/ˈfrɛndli/" }, { english: "Smart", spanish: "Inteligente", pronunciation: "/smɑrt/" }, { english: "Beautiful", spanish: "Hermoso/a", pronunciation: "/ˈbjutəfəl/" }], exercises: [{ type: "multiple-choice", question: "She is very ___", options: ["tall", "talls", "tallest"], correct: 0 }, { type: "pronunciation", word: "Beautiful", pronunciation: "/ˈbjutəfəl/" }] } },
+  9: { 
+    id: 9, title: "Describing People", level: "A1", duration: "20 min", difficulty: "Básico", rating: 4.8, type: "Vocabulario", 
+    objectives: ["Describir apariencia física", "Describir personalidad", "Usar adjetivos descriptivos", "Hablar de características"], 
+    content: { 
+      vocabulary: [
+        { english: "Tall", spanish: "Alto", pronunciation: "/tɔl/" }, 
+        { english: "Short", spanish: "Bajo", pronunciation: "/ʃɔrt/" }, 
+        { english: "Young", spanish: "Joven", pronunciation: "/jʌŋ/" }, 
+        { english: "Old", spanish: "Viejo", pronunciation: "/oʊld/" }, 
+        { english: "Thin", spanish: "Delgado", pronunciation: "/θɪn/" },
+        { english: "Fat", spanish: "Gordo", pronunciation: "/fæt/" },
+        { english: "Strong", spanish: "Fuerte", pronunciation: "/strɔŋ/" },
+        { english: "Weak", spanish: "Débil", pronunciation: "/wik/" },
+        { english: "Friendly", spanish: "Amable", pronunciation: "/ˈfrɛndli/" }, 
+        { english: "Smart", spanish: "Inteligente", pronunciation: "/smɑrt/" }, 
+        { english: "Beautiful", spanish: "Hermoso/a", pronunciation: "/ˈbjutəfəl/" },
+        { english: "Handsome", spanish: "Guapo", pronunciation: "/ˈhænsəm/" },
+        { english: "Ugly", spanish: "Feo", pronunciation: "/ˈʌɡli/" },
+        { english: "Funny", spanish: "Gracioso", pronunciation: "/ˈfʌni/" },
+        { english: "Serious", spanish: "Serio", pronunciation: "/ˈsɪriəs/" },
+        { english: "Kind", spanish: "Amable", pronunciation: "/kaɪnd/" },
+        { english: "Mean", spanish: "Malo", pronunciation: "/min/" },
+        { english: "Happy", spanish: "Feliz", pronunciation: "/ˈhæpi/" },
+        { english: "Sad", spanish: "Triste", pronunciation: "/sæd/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "She is very ___", options: ["tall", "talls", "tallest"], correct: 0 }, 
+        { type: "fill-blank", question: "He is very _____ (opposite of sad)", answer: "happy" },
+        { type: "multiple-choice", question: "My grandfather is ___", options: ["old", "young", "tall"], correct: 0 },
+        { type: "fill-blank", question: "She has a _____ personality (nice)", answer: "friendly" },
+        { type: "pronunciation", word: "Beautiful", pronunciation: "/ˈbjutəfəl/" },
+        { type: "pronunciation", word: "Handsome", pronunciation: "/ˈhænsəm/" }
+      ] 
+    } 
+  },
   10: { id: 10, title: "Adjetivos Básicos", level: "A1", duration: "20 min", difficulty: "Básico", rating: 4.8, type: "Vocabulario", objectives: ["Describir personas y cosas"], content: { vocabulary: [{ english: "Big", spanish: "Grande", pronunciation: "/bɪɡ/" }, { english: "Small", spanish: "Pequeño", pronunciation: "/smɔl/" }], exercises: [{ type: "multiple-choice", question: "The opposite of 'big' is ___", options: ["Small", "Tall", "Short"], correct: 0 }] } },
   11: { id: 11, title: "Artículos: A, An, The", level: "A1", duration: "22 min", difficulty: "Básico", rating: 4.6, type: "Gramática", objectives: ["Usar artículos correctamente"], content: { vocabulary: [{ english: "A cat", spanish: "Un gato", pronunciation: "/ə kæt/" }, { english: "An apple", spanish: "Una manzana", pronunciation: "/æn ˈæpəl/" }], exercises: [{ type: "fill-blank", question: "I have ___ dog", answer: "a" }] } },
   12: { id: 12, title: "Preguntas con WH", level: "A1", duration: "25 min", difficulty: "Básico", rating: 4.7, type: "Gramática", objectives: ["Hacer preguntas básicas"], content: { vocabulary: [{ english: "What", spanish: "Qué", pronunciation: "/wʌt/" }, { english: "Where", spanish: "Dónde", pronunciation: "/wɛr/" }], exercises: [{ type: "multiple-choice", question: "___ is your name?", options: ["What", "Where", "When"], correct: 0 }] } },
   13: { id: 13, title: "El Clima", level: "A1", duration: "15 min", difficulty: "Básico", rating: 4.8, type: "Vocabulario", objectives: ["Hablar del tiempo"], content: { vocabulary: [{ english: "Sunny", spanish: "Soleado", pronunciation: "/ˈsʌni/" }, { english: "Rainy", spanish: "Lluvioso", pronunciation: "/ˈreɪni/" }], exercises: [{ type: "pronunciation", word: "Weather", pronunciation: "/ˈwɛðər/" }] } },
-  14: { id: 14, title: "Comida y Bebidas", level: "A1", duration: "18 min", difficulty: "Básico", rating: 4.9, type: "Vocabulario", objectives: ["Vocabulario de alimentos"], content: { vocabulary: [{ english: "Water", spanish: "Agua", pronunciation: "/ˈwɔtər/" }, { english: "Bread", spanish: "Pan", pronunciation: "/brɛd/" }], exercises: [{ type: "multiple-choice", question: "I drink ___", options: ["Water", "Bread", "Chair"], correct: 0 }] } },
+  14: { 
+    id: 14, title: "Comida y Bebidas", level: "A1", duration: "18 min", difficulty: "Básico", rating: 4.9, type: "Vocabulario", 
+    objectives: ["Vocabulario de alimentos", "Bebidas comunes", "Comidas del día", "Expresar preferencias"], 
+    content: { 
+      vocabulary: [
+        { english: "Water", spanish: "Agua", pronunciation: "/ˈwɔtər/" }, 
+        { english: "Milk", spanish: "Leche", pronunciation: "/mɪlk/" },
+        { english: "Coffee", spanish: "Café", pronunciation: "/ˈkɔfi/" },
+        { english: "Tea", spanish: "Té", pronunciation: "/ti/" },
+        { english: "Juice", spanish: "Jugo", pronunciation: "/dʒus/" },
+        { english: "Bread", spanish: "Pan", pronunciation: "/brɛd/" },
+        { english: "Butter", spanish: "Mantequilla", pronunciation: "/ˈbʌtər/" },
+        { english: "Cheese", spanish: "Queso", pronunciation: "/tʃiz/" },
+        { english: "Egg", spanish: "Huevo", pronunciation: "/ɛɡ/" },
+        { english: "Meat", spanish: "Carne", pronunciation: "/mit/" },
+        { english: "Chicken", spanish: "Pollo", pronunciation: "/ˈtʃɪkən/" },
+        { english: "Fish", spanish: "Pescado", pronunciation: "/fɪʃ/" },
+        { english: "Rice", spanish: "Arroz", pronunciation: "/raɪs/" },
+        { english: "Pasta", spanish: "Pasta", pronunciation: "/ˈpɑstə/" },
+        { english: "Salad", spanish: "Ensalada", pronunciation: "/ˈsæləd/" },
+        { english: "Fruit", spanish: "Fruta", pronunciation: "/frut/" },
+        { english: "Apple", spanish: "Manzana", pronunciation: "/ˈæpəl/" },
+        { english: "Banana", spanish: "Plátano", pronunciation: "/bəˈnænə/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "I drink ___", options: ["Water", "Bread", "Chair"], correct: 0 },
+        { type: "fill-blank", question: "I like ___ for breakfast", answer: "coffee" },
+        { type: "multiple-choice", question: "What do you eat in the morning?", options: ["Bread and butter", "Dinner", "Lunch"], correct: 0 },
+        { type: "pronunciation", word: "Chicken", pronunciation: "/ˈtʃɪkən/" },
+        { type: "fill-blank", question: "An ___ is a fruit", answer: "apple" }
+      ] 
+    } 
+  },
   15: { id: 15, title: "En el Restaurante", level: "A1", duration: "20 min", difficulty: "Básico", rating: 4.7, type: "Conversación", objectives: ["Ordenar comida"], content: { vocabulary: [{ english: "Menu", spanish: "Menú", pronunciation: "/ˈmɛnju/" }, { english: "I would like", spanish: "Me gustaría", pronunciation: "/aɪ wʊd laɪk/" }], exercises: [{ type: "fill-blank", question: "I would ___ a coffee", answer: "like" }] } },
   16: { id: 16, title: "Partes del Cuerpo", level: "A1", duration: "14 min", difficulty: "Básico", rating: 4.8, type: "Vocabulario", objectives: ["Identificar partes del cuerpo"], content: { vocabulary: [{ english: "Head", spanish: "Cabeza", pronunciation: "/hɛd/" }, { english: "Hand", spanish: "Mano", pronunciation: "/hænd/" }], exercises: [{ type: "pronunciation", word: "Shoulder", pronunciation: "/ˈʃoʊldər/" }] } },
   17: { id: 17, title: "Presente Simple - Escritura", level: "A1", duration: "28 min", difficulty: "Básico", rating: 4.6, type: "Gramática", objectives: ["Formar presente simple", "Escribir oraciones afirmativas", "Formar negaciones", "Hacer preguntas en presente simple"], content: { vocabulary: [{ english: "I work", spanish: "Yo trabajo", pronunciation: "/aɪ wɜrk/" }, { english: "She studies", spanish: "Ella estudia", pronunciation: "/ʃi ˈstʌdiz/" }, { english: "He doesn't play", spanish: "Él no juega", pronunciation: "/hi ˈdʌzənt pleɪ/" }, { english: "Do you like?", spanish: "¿Te gusta?", pronunciation: "/du ju laɪk/" }], exercises: [{ type: "fill-blank", question: "He ___ every day", answer: "works" }, { type: "multiple-choice", question: "She ___ not eat meat", options: ["do", "does", "is"], correct: 1 }] } },
@@ -204,7 +318,36 @@ export const lessonsData: Record<number, any> = {
 
   // A2 LESSONS (25-56) - 32 lessons
   25: { id: 25, title: "Presente Continuo", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.7, type: "Gramática", objectives: ["Formar presente continuo", "Describir acciones en curso"], content: { vocabulary: [{ english: "I am working", spanish: "Estoy trabajando", pronunciation: "/aɪ æm ˈwɜrkɪŋ/" }, { english: "She is eating", spanish: "Ella está comiendo", pronunciation: "/ʃi ɪz ˈitɪŋ/" }], exercises: [{ type: "fill-blank", question: "He ___ (run) now", answer: "is running" }, { type: "multiple-choice", question: "They ___ playing", options: ["am", "is", "are"], correct: 2 }] } },
-  26: { id: 26, title: "Simple Past - Regular Verbs", level: "A2", duration: "30 min", difficulty: "Intermedio", rating: 4.6, type: "Gramática", objectives: ["Formar pasado simple con verbos regulares", "Reglas de -ed", "Pronunciación de -ed", "Escribir oraciones en pasado"], content: { vocabulary: [{ english: "I worked", spanish: "Trabajé", pronunciation: "/aɪ wɜrkt/" }, { english: "She walked", spanish: "Ella caminó", pronunciation: "/ʃi wɔkt/" }, { english: "They played", spanish: "Ellos jugaron", pronunciation: "/ðeɪ pleɪd/" }, { english: "We studied", spanish: "Estudiamos", pronunciation: "/wi ˈstʌdid/" }, { english: "He watched", spanish: "Él miró", pronunciation: "/hi wɑtʃt/" }], exercises: [{ type: "fill-blank", question: "Yesterday I ___ (work) all day", answer: "worked" }, { type: "multiple-choice", question: "She ___ the movie", options: ["watched", "watch", "watching"], correct: 0 }] } },
+  26: { 
+    id: 26, title: "Simple Past - Regular Verbs", level: "A2", duration: "30 min", difficulty: "Intermedio", rating: 4.6, type: "Gramática", 
+    objectives: ["Formar pasado simple con verbos regulares", "Reglas de -ed", "Pronunciación de -ed", "Escribir oraciones en pasado"], 
+    content: { 
+      vocabulary: [
+        { english: "I worked", spanish: "Trabajé", pronunciation: "/aɪ wɜrkt/" }, 
+        { english: "She walked", spanish: "Ella caminó", pronunciation: "/ʃi wɔkt/" }, 
+        { english: "They played", spanish: "Ellos jugaron", pronunciation: "/ðeɪ pleɪd/" }, 
+        { english: "We studied", spanish: "Estudiamos", pronunciation: "/wi ˈstʌdid/" }, 
+        { english: "He watched", spanish: "Él miró", pronunciation: "/hi wɑtʃt/" },
+        { english: "I cleaned", spanish: "Limpié", pronunciation: "/aɪ klind/" },
+        { english: "They helped", spanish: "Ayudaron", pronunciation: "/ðeɪ hɛlpt/" },
+        { english: "She cooked", spanish: "Ella cocinó", pronunciation: "/ʃi kʊkt/" },
+        { english: "We visited", spanish: "Visitamos", pronunciation: "/wi ˈvɪzɪtɪd/" },
+        { english: "He started", spanish: "Él comenzó", pronunciation: "/hi ˈstɑrtɪd/" },
+        { english: "I finished", spanish: "Terminé", pronunciation: "/aɪ ˈfɪnɪʃt/" },
+        { english: "They arrived", spanish: "Llegaron", pronunciation: "/ðeɪ əˈraɪvd/" },
+        { english: "She talked", spanish: "Ella habló", pronunciation: "/ʃi tɔkt/" },
+        { english: "We loved", spanish: "Amamos", pronunciation: "/wi lʌvd/" }
+      ], 
+      exercises: [
+        { type: "fill-blank", question: "Yesterday I ___ (work) all day", answer: "worked" }, 
+        { type: "multiple-choice", question: "She ___ the movie", options: ["watched", "watch", "watching"], correct: 0 },
+        { type: "fill-blank", question: "They ___ (play) soccer last week", answer: "played" },
+        { type: "multiple-choice", question: "We ___ our grandparents", options: ["visited", "visit", "visiting"], correct: 0 },
+        { type: "fill-blank", question: "He ___ (finish) his homework", answer: "finished" },
+        { type: "pronunciation", word: "Worked", pronunciation: "/wɜrkt/" }
+      ] 
+    } 
+  },
   27: { id: 27, title: "Adverbios de Frecuencia", level: "A2", duration: "20 min", difficulty: "Intermedio", rating: 4.8, type: "Gramática", objectives: ["Always, usually, sometimes, never"], content: { vocabulary: [{ english: "Always", spanish: "Siempre", pronunciation: "/ˈɔlweɪz/" }, { english: "Never", spanish: "Nunca", pronunciation: "/ˈnɛvər/" }], exercises: [{ type: "multiple-choice", question: "I ___ drink coffee", options: ["always", "yesterday"], correct: 0 }] } },
   28: { id: 28, title: "Comparativos", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.7, type: "Gramática", objectives: ["Comparar cosas y personas"], content: { vocabulary: [{ english: "Bigger", spanish: "Más grande", pronunciation: "/ˈbɪɡər/" }, { english: "More beautiful", spanish: "Más hermoso", pronunciation: "/mɔr ˈbjutəfəl/" }], exercises: [{ type: "fill-blank", question: "She is ___ than me (tall)", answer: "taller" }] } },
   29: { id: 29, title: "Superlativos", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.6, type: "Gramática", objectives: ["El más, la más"], content: { vocabulary: [{ english: "The biggest", spanish: "El más grande", pronunciation: "/ðə ˈbɪɡɪst/" }], exercises: [{ type: "multiple-choice", question: "She is ___ smartest", options: ["a", "an", "the"], correct: 2 }] } },
@@ -214,9 +357,69 @@ export const lessonsData: Record<number, any> = {
   
   // Continue with more A2 lessons (33-56)...
   33: { id: 33, title: "En el Aeropuerto", level: "A2", duration: "23 min", difficulty: "Intermedio", rating: 4.7, type: "Conversación", objectives: ["Check-in, gate, boarding"], content: { vocabulary: [{ english: "Flight", spanish: "Vuelo", pronunciation: "/flaɪt/" }, { english: "Passport", spanish: "Pasaporte", pronunciation: "/ˈpæspɔrt/" }], exercises: [{ type: "fill-blank", question: "Show me your ___, please", answer: "passport" }] } },
-  34: { id: 34, title: "Shopping and Money", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.8, type: "Conversación", objectives: ["Precios y dinero", "Comprar en tiendas", "Tallas y devoluciones", "Formas de pago"], content: { vocabulary: [{ english: "How much", spanish: "Cuánto cuesta", pronunciation: "/haʊ mʌtʃ/" }, { english: "Dollar", spanish: "Dólar", pronunciation: "/ˈdɑlər/" }, { english: "Change", spanish: "Cambio", pronunciation: "/tʃeɪndʒ/" }, { english: "Cash", spanish: "Efectivo", pronunciation: "/kæʃ/" }, { english: "Credit card", spanish: "Tarjeta de crédito", pronunciation: "/ˈkrɛdɪt kɑrd/" }, { english: "Receipt", spanish: "Recibo", pronunciation: "/rɪˈsit/" }], exercises: [{ type: "multiple-choice", question: "___ is this shirt?", options: ["How much", "How many"], correct: 0 }, { type: "fill-blank", question: "I'll pay by ___", answer: "cash" }] } },
+  34: { 
+    id: 34, title: "Shopping and Money", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.8, type: "Conversación", 
+    objectives: ["Precios y dinero", "Comprar en tiendas", "Tallas y devoluciones", "Formas de pago"], 
+    content: { 
+      vocabulary: [
+        { english: "How much", spanish: "Cuánto cuesta", pronunciation: "/haʊ mʌtʃ/" }, 
+        { english: "How many", spanish: "Cuántos", pronunciation: "/haʊ ˈmɛni/" },
+        { english: "Dollar", spanish: "Dólar", pronunciation: "/ˈdɑlər/" }, 
+        { english: "Cent", spanish: "Centavo", pronunciation: "/sɛnt/" },
+        { english: "Price", spanish: "Precio", pronunciation: "/praɪs/" },
+        { english: "Expensive", spanish: "Caro", pronunciation: "/ɪkˈspɛnsɪv/" },
+        { english: "Cheap", spanish: "Barato", pronunciation: "/tʃip/" },
+        { english: "Discount", spanish: "Descuento", pronunciation: "/ˈdɪskaʊnt/" },
+        { english: "Sale", spanish: "Rebaja", pronunciation: "/seɪl/" },
+        { english: "Change", spanish: "Cambio", pronunciation: "/tʃeɪndʒ/" }, 
+        { english: "Cash", spanish: "Efectivo", pronunciation: "/kæʃ/" }, 
+        { english: "Credit card", spanish: "Tarjeta de crédito", pronunciation: "/ˈkrɛdɪt kɑrd/" }, 
+        { english: "Debit card", spanish: "Tarjeta de débito", pronunciation: "/ˈdɛbɪt kɑrd/" },
+        { english: "Receipt", spanish: "Recibo", pronunciation: "/rɪˈsit/" },
+        { english: "Size", spanish: "Talla", pronunciation: "/saɪz/" },
+        { english: "Return", spanish: "Devolución", pronunciation: "/rɪˈtɜrn/" },
+        { english: "Refund", spanish: "Reembolso", pronunciation: "/ˈrifʌnd/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "___ is this shirt?", options: ["How much", "How many"], correct: 0 }, 
+        { type: "fill-blank", question: "I'll pay by ___", answer: "cash" },
+        { type: "multiple-choice", question: "This is too ___!", options: ["expensive", "expense", "expensively"], correct: 0 },
+        { type: "fill-blank", question: "Can I get a ___? (devolución)", answer: "refund" },
+        { type: "pronunciation", word: "Receipt", pronunciation: "/rɪˈsit/" },
+        { type: "fill-blank", question: "There's a ___ on shoes today", answer: "sale" }
+      ] 
+    } 
+  },
   35: { id: 35, title: "Futuro con Will", level: "A2", duration: "27 min", difficulty: "Intermedio", rating: 4.6, type: "Gramática", objectives: ["Planes futuros"], content: { vocabulary: [{ english: "I will go", spanish: "Iré", pronunciation: "/aɪ wɪl ɡoʊ/" }], exercises: [{ type: "fill-blank", question: "She ___ travel tomorrow", answer: "will" }] } },
-  36: { id: 36, title: "Future Plans and Going to", level: "A2", duration: "27 min", difficulty: "Intermedio", rating: 4.7, type: "Gramática", objectives: ["Hablar de planes futuros", "Usar going to", "Expresar intenciones", "Hacer predicciones"], content: { vocabulary: [{ english: "I'm going to study", spanish: "Voy a estudiar", pronunciation: "/aɪm ˈɡoʊɪŋ tu ˈstʌdi/" }, { english: "We're going to travel", spanish: "Vamos a viajar", pronunciation: "/wir ˈɡoʊɪŋ tu ˈtrævəl/" }, { english: "She's going to buy", spanish: "Ella va a comprar", pronunciation: "/ʃiz ˈɡoʊɪŋ tu baɪ/" }, { english: "What are you going to do?", spanish: "¿Qué vas a hacer?", pronunciation: "/wʌt ɑr ju ˈɡoʊɪŋ tu du/" }], exercises: [{ type: "multiple-choice", question: "He ___ visit his family", options: ["is going to", "will going", "going"], correct: 0 }, { type: "fill-blank", question: "They ___ to the concert tomorrow", answer: "are going" }] } },
+  36: { 
+    id: 36, title: "Future Plans and Going to", level: "A2", duration: "27 min", difficulty: "Intermedio", rating: 4.7, type: "Gramática", 
+    objectives: ["Hablar de planes futuros", "Usar going to", "Expresar intenciones", "Hacer predicciones"], 
+    content: { 
+      vocabulary: [
+        { english: "I'm going to study", spanish: "Voy a estudiar", pronunciation: "/aɪm ˈɡoʊɪŋ tu ˈstʌdi/" }, 
+        { english: "We're going to travel", spanish: "Vamos a viajar", pronunciation: "/wir ˈɡoʊɪŋ tu ˈtrævəl/" }, 
+        { english: "She's going to buy", spanish: "Ella va a comprar", pronunciation: "/ʃiz ˈɡoʊɪŋ tu baɪ/" }, 
+        { english: "He's going to eat", spanish: "Él va a comer", pronunciation: "/hiz ˈɡoʊɪŋ tu it/" },
+        { english: "They're going to play", spanish: "Ellos van a jugar", pronunciation: "/ðɛr ˈɡoʊɪŋ tu pleɪ/" },
+        { english: "I'm not going to work", spanish: "No voy a trabajar", pronunciation: "/aɪm nɑt ˈɡoʊɪŋ tu wɜrk/" },
+        { english: "What are you going to do?", spanish: "¿Qué vas a hacer?", pronunciation: "/wʌt ɑr ju ˈɡoʊɪŋ tu du/" },
+        { english: "Where are you going to go?", spanish: "¿A dónde vas a ir?", pronunciation: "/wɛr ɑr ju ˈɡoʊɪŋ tu ɡoʊ/" },
+        { english: "When is she going to arrive?", spanish: "¿Cuándo va a llegar?", pronunciation: "/wɛn ɪz ʃi ˈɡoʊɪŋ tu əˈraɪv/" },
+        { english: "It's going to rain", spanish: "Va a llover", pronunciation: "/ɪts ˈɡoʊɪŋ tu reɪn/" },
+        { english: "Tomorrow", spanish: "Mañana", pronunciation: "/təˈmɑroʊ/" },
+        { english: "Next week", spanish: "La próxima semana", pronunciation: "/nɛkst wik/" },
+        { english: "Soon", spanish: "Pronto", pronunciation: "/sun/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "He ___ visit his family", options: ["is going to", "will going", "going"], correct: 0 }, 
+        { type: "fill-blank", question: "They ___ to the concert tomorrow", answer: "are going" },
+        { type: "multiple-choice", question: "___ you going to study tonight?", options: ["Are", "Is", "Am"], correct: 0 },
+        { type: "fill-blank", question: "I'm ___ buy a new car", answer: "going to" },
+        { type: "fill-blank", question: "It ___ rain tomorrow", answer: "is going to" },
+        { type: "pronunciation", word: "Tomorrow", pronunciation: "/təˈmɑroʊ/" }
+      ] 
+    } 
+  },
   37: { id: 37, title: "Comida y Nutrición", level: "A2", duration: "22 min", difficulty: "Intermedio", rating: 4.8, type: "Vocabulario", objectives: ["Alimentos saludables"], content: { vocabulary: [{ english: "Vegetables", spanish: "Verduras", pronunciation: "/ˈvɛdʒtəbəlz/" }, { english: "Healthy", spanish: "Saludable", pronunciation: "/ˈhɛlθi/" }], exercises: [{ type: "pronunciation", word: "Nutritious", pronunciation: "/nuˈtrɪʃəs/" }] } },
   38: { id: 38, title: "Deportes", level: "A2", duration: "20 min", difficulty: "Intermedio", rating: 4.9, type: "Vocabulario", objectives: ["Vocabulario deportivo"], content: { vocabulary: [{ english: "Soccer", spanish: "Fútbol", pronunciation: "/ˈsɑkər/" }, { english: "Basketball", spanish: "Baloncesto", pronunciation: "/ˈbæskɪtˌbɔl/" }], exercises: [{ type: "fill-blank", question: "I play ___ every weekend", answer: "soccer" }] } },
   39: { id: 39, title: "Tecnología", level: "A2", duration: "24 min", difficulty: "Intermedio", rating: 4.7, type: "Vocabulario", objectives: ["Dispositivos y apps"], content: { vocabulary: [{ english: "Computer", spanish: "Computadora", pronunciation: "/kəmˈpjutər/" }, { english: "Download", spanish: "Descargar", pronunciation: "/ˈdaʊnˌloʊd/" }], exercises: [{ type: "pronunciation", word: "Application", pronunciation: "/ˌæplɪˈkeɪʃən/" }] } },
@@ -231,15 +434,114 @@ export const lessonsData: Record<number, any> = {
   48: { id: 48, title: "Cuantificadores", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.6, type: "Gramática", objectives: ["Some, any, much, many"], content: { vocabulary: [{ english: "Some water", spanish: "Algo de agua", pronunciation: "/sʌm ˈwɔtər/" }], exercises: [{ type: "fill-blank", question: "Do you have ___ questions?", answer: "any" }] } },
   49: { id: 49, title: "Actividades de Tiempo Libre", level: "A2", duration: "23 min", difficulty: "Intermedio", rating: 4.8, type: "Vocabulario", objectives: ["Entretenimiento"], content: { vocabulary: [{ english: "Cinema", spanish: "Cine", pronunciation: "/ˈsɪnəmə/" }, { english: "Concert", spanish: "Concierto", pronunciation: "/ˈkɑnsərt/" }], exercises: [{ type: "pronunciation", word: "Entertainment", pronunciation: "/ˌɛntərˈteɪnmənt/" }] } },
   50: { id: 50, title: "Rutinas Diarias", level: "A2", duration: "24 min", difficulty: "Intermedio", rating: 4.7, type: "Conversación", objectives: ["Describir tu día"], content: { vocabulary: [{ english: "Wake up", spanish: "Despertarse", pronunciation: "/weɪk ʌp/" }, { english: "Get dressed", spanish: "Vestirse", pronunciation: "/ɡɛt drɛst/" }], exercises: [{ type: "fill-blank", question: "I ___ up at 7am", answer: "wake" }] } },
-  51: { id: 51, title: "Past Tense Stories", level: "A2", duration: "30 min", difficulty: "Intermedio", rating: 4.7, type: "Gramática", objectives: ["Narrar eventos pasados", "Usar past simple y past continuous", "Conectar eventos con conectores", "Escribir historias cortas"], content: { vocabulary: [{ english: "I was walking when...", spanish: "Estaba caminando cuando...", pronunciation: "/aɪ wʌz ˈwɔkɪŋ wɛn/" }, { english: "Suddenly", spanish: "De repente", pronunciation: "/ˈsʌdənli/" }, { english: "Then", spanish: "Entonces", pronunciation: "/ðɛn/" }, { english: "After that", spanish: "Después de eso", pronunciation: "/ˈæftər ðæt/" }, { english: "Finally", spanish: "Finalmente", pronunciation: "/ˈfaɪnəli/" }], exercises: [{ type: "multiple-choice", question: "She ___ reading when I called", options: ["was", "were", "is"], correct: 0 }, { type: "fill-blank", question: "___, he left the house", answer: "Suddenly" }] } },
+  51: { 
+    id: 51, title: "Past Tense Stories", level: "A2", duration: "30 min", difficulty: "Intermedio", rating: 4.7, type: "Gramática", 
+    objectives: ["Narrar eventos pasados", "Usar past simple y past continuous", "Conectar eventos con conectores", "Escribir historias cortas"], 
+    content: { 
+      vocabulary: [
+        { english: "I was walking when...", spanish: "Estaba caminando cuando...", pronunciation: "/aɪ wʌz ˈwɔkɪŋ wɛn/" }, 
+        { english: "She was reading", spanish: "Ella estaba leyendo", pronunciation: "/ʃi wʌz ˈridɪŋ/" },
+        { english: "They were playing", spanish: "Ellos estaban jugando", pronunciation: "/ðeɪ wɜr ˈpleɪɪŋ/" },
+        { english: "While", spanish: "Mientras", pronunciation: "/waɪl/" },
+        { english: "When", spanish: "Cuando", pronunciation: "/wɛn/" },
+        { english: "Suddenly", spanish: "De repente", pronunciation: "/ˈsʌdənli/" }, 
+        { english: "Then", spanish: "Entonces", pronunciation: "/ðɛn/" }, 
+        { english: "After that", spanish: "Después de eso", pronunciation: "/ˈæftər ðæt/" }, 
+        { english: "Next", spanish: "Luego", pronunciation: "/nɛkst/" },
+        { english: "Later", spanish: "Más tarde", pronunciation: "/ˈleɪtər/" },
+        { english: "Finally", spanish: "Finalmente", pronunciation: "/ˈfaɪnəli/" },
+        { english: "In the end", spanish: "Al final", pronunciation: "/ɪn ði ɛnd/" },
+        { english: "First", spanish: "Primero", pronunciation: "/fɜrst/" },
+        { english: "At first", spanish: "Al principio", pronunciation: "/æt fɜrst/" },
+        { english: "Meanwhile", spanish: "Mientras tanto", pronunciation: "/ˈminˌwaɪl/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "She ___ reading when I called", options: ["was", "were", "is"], correct: 0 }, 
+        { type: "fill-blank", question: "___, he left the house", answer: "Suddenly" },
+        { type: "multiple-choice", question: "I was sleeping ___ the phone rang", options: ["when", "while", "then"], correct: 0 },
+        { type: "fill-blank", question: "___, we went home", answer: "Finally" },
+        { type: "fill-blank", question: "___ I was cooking, he was watching TV", answer: "While" },
+        { type: "pronunciation", word: "Meanwhile", pronunciation: "/ˈminˌwaɪl/" }
+      ] 
+    } 
+  },
   52: { id: 52, title: "Dando Consejos", level: "A2", duration: "25 min", difficulty: "Intermedio", rating: 4.8, type: "Conversación", objectives: ["Why don't you, How about"], content: { vocabulary: [{ english: "Why don't you", spanish: "¿Por qué no", pronunciation: "/waɪ doʊnt ju/" }], exercises: [{ type: "fill-blank", question: "___ about going to the park?", answer: "How" }] } },
   53: { id: 53, title: "Problemas y Soluciones", level: "A2", duration: "27 min", difficulty: "Intermedio", rating: 4.7, type: "Conversación", objectives: ["Expresar problemas"], content: { vocabulary: [{ english: "Problem", spanish: "Problema", pronunciation: "/ˈprɑbləm/" }, { english: "Solution", spanish: "Solución", pronunciation: "/səˈluʃən/" }], exercises: [{ type: "pronunciation", word: "Difficulty", pronunciation: "/ˈdɪfɪkəlti/" }] } },
   54: { id: 54, title: "Pronombres Objeto", level: "A2", duration: "26 min", difficulty: "Intermedio", rating: 4.6, type: "Gramática", objectives: ["Me, you, him, her, us, them"], content: { vocabulary: [{ english: "Call me", spanish: "Llámame", pronunciation: "/kɔl mi/" }], exercises: [{ type: "fill-blank", question: "I love ___ (she)", answer: "her" }] } },
-  55: { id: 55, title: "Travel and Transportation", level: "A2", duration: "28 min", difficulty: "Intermedio", rating: 4.9, type: "Vocabulario", objectives: ["Vocabulario de viaje", "Medios de transporte", "En el hotel", "Turismo"], content: { vocabulary: [{ english: "Bus", spanish: "Autobús", pronunciation: "/bʌs/" }, { english: "Train", spanish: "Tren", pronunciation: "/treɪn/" }, { english: "Airplane", spanish: "Avión", pronunciation: "/ˈɛrˌpleɪn/" }, { english: "Taxi", spanish: "Taxi", pronunciation: "/ˈtæksi/" }, { english: "Subway", spanish: "Metro", pronunciation: "/ˈsʌbˌweɪ/" }, { english: "Reservation", spanish: "Reservación", pronunciation: "/ˌrɛzərˈveɪʃən/" }, { english: "Suitcase", spanish: "Maleta", pronunciation: "/ˈsutˌkeɪs/" }, { english: "Ticket", spanish: "Boleto", pronunciation: "/ˈtɪkɪt/" }], exercises: [{ type: "multiple-choice", question: "I travel by ___", options: ["train", "trains", "training"], correct: 0 }, { type: "pronunciation", word: "Transportation", pronunciation: "/ˌtrænspərˈteɪʃən/" }] } },
+  55: { 
+    id: 55, title: "Travel and Transportation", level: "A2", duration: "28 min", difficulty: "Intermedio", rating: 4.9, type: "Vocabulario", 
+    objectives: ["Vocabulario de viaje", "Medios de transporte", "En el hotel", "Turismo"], 
+    content: { 
+      vocabulary: [
+        { english: "Bus", spanish: "Autobús", pronunciation: "/bʌs/" }, 
+        { english: "Train", spanish: "Tren", pronunciation: "/treɪn/" }, 
+        { english: "Airplane", spanish: "Avión", pronunciation: "/ˈɛrˌpleɪn/" }, 
+        { english: "Taxi", spanish: "Taxi", pronunciation: "/ˈtæksi/" }, 
+        { english: "Subway", spanish: "Metro", pronunciation: "/ˈsʌbˌweɪ/" }, 
+        { english: "Car", spanish: "Carro", pronunciation: "/kɑr/" },
+        { english: "Bicycle", spanish: "Bicicleta", pronunciation: "/ˈbaɪsɪkəl/" },
+        { english: "Boat", spanish: "Barco", pronunciation: "/boʊt/" },
+        { english: "Ship", spanish: "Nave", pronunciation: "/ʃɪp/" },
+        { english: "Airport", spanish: "Aeropuerto", pronunciation: "/ˈɛrˌpɔrt/" },
+        { english: "Station", spanish: "Estación", pronunciation: "/ˈsteɪʃən/" },
+        { english: "Hotel", spanish: "Hotel", pronunciation: "/hoʊˈtɛl/" },
+        { english: "Reservation", spanish: "Reservación", pronunciation: "/ˌrɛzərˈveɪʃən/" }, 
+        { english: "Check-in", spanish: "Registro", pronunciation: "/ˈtʃɛk ɪn/" },
+        { english: "Check-out", spanish: "Salida", pronunciation: "/ˈtʃɛk aʊt/" },
+        { english: "Luggage", spanish: "Equipaje", pronunciation: "/ˈlʌɡɪdʒ/" },
+        { english: "Suitcase", spanish: "Maleta", pronunciation: "/ˈsutˌkeɪs/" }, 
+        { english: "Ticket", spanish: "Boleto", pronunciation: "/ˈtɪkɪt/" },
+        { english: "Boarding pass", spanish: "Pase de abordar", pronunciation: "/ˈbɔrdɪŋ pæs/" },
+        { english: "Destination", spanish: "Destino", pronunciation: "/ˌdɛstəˈneɪʃən/" },
+        { english: "Tourist", spanish: "Turista", pronunciation: "/ˈtʊrɪst/" },
+        { english: "Map", spanish: "Mapa", pronunciation: "/mæp/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "I travel by ___", options: ["train", "trains", "training"], correct: 0 }, 
+        { type: "fill-blank", question: "I need to make a ___ for the hotel", answer: "reservation" },
+        { type: "multiple-choice", question: "Where is my boarding ___?", options: ["pass", "ticket", "card"], correct: 0 },
+        { type: "fill-blank", question: "Pack your ___ for the trip", answer: "suitcase" },
+        { type: "pronunciation", word: "Transportation", pronunciation: "/ˌtrænspərˈteɪʃən/" },
+        { type: "pronunciation", word: "Destination", pronunciation: "/ˌdɛstəˈneɪʃən/" }
+      ] 
+    } 
+  },
   56: { id: 56, title: "Repaso Final A2", level: "A2", duration: "35 min", difficulty: "Intermedio", rating: 4.8, type: "Evaluación", objectives: ["Evaluar conocimientos A2"], content: { vocabulary: [{ english: "Comprehensive review", spanish: "Repaso completo", pronunciation: "/ˌkɑmprɪˈhɛnsɪv rɪˈvju/" }], exercises: [{ type: "multiple-choice", question: "I ___ to the beach yesterday", options: ["go", "went", "going"], correct: 1 }] } },
 
   // B1 LESSONS (57-96) - 40 lessons
-  57: { id: 57, title: "Present Perfect vs Simple Past", level: "B1", duration: "35 min", difficulty: "Avanzado", rating: 4.7, type: "Gramática", objectives: ["Diferenciar presente perfecto y pasado simple", "Usar marcadores temporales", "Experiencias vs eventos específicos", "Just, already, yet"], content: { vocabulary: [{ english: "I have seen", spanish: "He visto", pronunciation: "/aɪ hæv sin/" }, { english: "I saw", spanish: "Vi", pronunciation: "/aɪ sɔ/" }, { english: "Have you ever been?", spanish: "¿Alguna vez has estado?", pronunciation: "/hæv ju ˈɛvər bin/" }, { english: "I went yesterday", spanish: "Fui ayer", pronunciation: "/aɪ wɛnt ˈjɛstərdeɪ/" }, { english: "Just", spanish: "Justo/Apenas", pronunciation: "/dʒʌst/" }, { english: "Already", spanish: "Ya", pronunciation: "/ɔlˈrɛdi/" }], exercises: [{ type: "multiple-choice", question: "I ___ Paris last year", options: ["visited", "have visited", "visit"], correct: 0 }, { type: "fill-blank", question: "She ___ (already/finish) her homework", answer: "has already finished" }] } },
+  57: { 
+    id: 57, title: "Present Perfect vs Simple Past", level: "B1", duration: "35 min", difficulty: "Avanzado", rating: 4.7, type: "Gramática", 
+    objectives: ["Diferenciar presente perfecto y pasado simple", "Usar marcadores temporales", "Experiencias vs eventos específicos", "Just, already, yet"], 
+    content: { 
+      vocabulary: [
+        { english: "I have seen", spanish: "He visto", pronunciation: "/aɪ hæv sin/" }, 
+        { english: "I saw", spanish: "Vi", pronunciation: "/aɪ sɔ/" }, 
+        { english: "I have been", spanish: "He estado", pronunciation: "/aɪ hæv bin/" },
+        { english: "I went", spanish: "Fui", pronunciation: "/aɪ wɛnt/" },
+        { english: "Have you ever been?", spanish: "¿Alguna vez has estado?", pronunciation: "/hæv ju ˈɛvər bin/" }, 
+        { english: "I went yesterday", spanish: "Fui ayer", pronunciation: "/aɪ wɛnt ˈjɛstərdeɪ/" }, 
+        { english: "Just", spanish: "Justo/Apenas", pronunciation: "/dʒʌst/" }, 
+        { english: "Already", spanish: "Ya", pronunciation: "/ɔlˈrɛdi/" },
+        { english: "Yet", spanish: "Todavía/Aún", pronunciation: "/jɛt/" },
+        { english: "Ever", spanish: "Alguna vez", pronunciation: "/ˈɛvər/" },
+        { english: "Never", spanish: "Nunca", pronunciation: "/ˈnɛvər/" },
+        { english: "Recently", spanish: "Recientemente", pronunciation: "/ˈrisəntli/" },
+        { english: "Lately", spanish: "Últimamente", pronunciation: "/ˈleɪtli/" },
+        { english: "So far", spanish: "Hasta ahora", pronunciation: "/soʊ fɑr/" },
+        { english: "For two years", spanish: "Por dos años", pronunciation: "/fɔr tu jɪrz/" },
+        { english: "Since 2020", spanish: "Desde 2020", pronunciation: "/sɪns ˈtwɛnti ˈtwɛnti/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "I ___ Paris last year", options: ["visited", "have visited", "visit"], correct: 0 }, 
+        { type: "fill-blank", question: "She ___ (already/finish) her homework", answer: "has already finished" },
+        { type: "multiple-choice", question: "Have you ___ been to Japan?", options: ["ever", "never", "yet"], correct: 0 },
+        { type: "fill-blank", question: "I haven't done it ___", answer: "yet" },
+        { type: "multiple-choice", question: "They ___ here since Monday", options: ["have been", "were", "are"], correct: 0 },
+        { type: "fill-blank", question: "I ___ just arrived", answer: "have" },
+        { type: "pronunciation", word: "Recently", pronunciation: "/ˈrisəntli/" }
+      ] 
+    } 
+  },
   58: { id: 58, title: "Presente Perfecto Continuo", level: "B1", duration: "32 min", difficulty: "Avanzado", rating: 4.6, type: "Gramática", objectives: ["Acciones que comenzaron en el pasado"], content: { vocabulary: [{ english: "I have been working", spanish: "He estado trabajando", pronunciation: "/aɪ hæv bin ˈwɜrkɪŋ/" }], exercises: [{ type: "multiple-choice", question: "She ___ been studying", options: ["have", "has", "is"], correct: 1 }] } },
   59: { id: 59, title: "Voz Pasiva", level: "B1", duration: "35 min", difficulty: "Avanzado", rating: 4.5, type: "Gramática", objectives: ["Formar oraciones pasivas"], content: { vocabulary: [{ english: "The car was made", spanish: "El carro fue hecho", pronunciation: "/ðə kɑr wʌz meɪd/" }], exercises: [{ type: "fill-blank", question: "The book ___ written by him", answer: "was" }] } },
   60: { id: 60, title: "Condicionales Tipo 1", level: "B1", duration: "30 min", difficulty: "Avanzado", rating: 4.7, type: "Gramática", objectives: ["If + presente, will"], content: { vocabulary: [{ english: "If it rains, I will stay", spanish: "Si llueve, me quedaré", pronunciation: "/ɪf ɪt reɪnz aɪ wɪl steɪ/" }], exercises: [{ type: "multiple-choice", question: "If you study, you ___ pass", options: ["will", "would", "can"], correct: 0 }] } },
@@ -256,7 +558,39 @@ export const lessonsData: Record<number, any> = {
   71: { id: 71, title: "Cultura Anglosajona", level: "B1", duration: "26 min", difficulty: "Avanzado", rating: 4.8, type: "Cultural", objectives: ["Costumbres y tradiciones"], content: { vocabulary: [{ english: "Thanksgiving", spanish: "Día de Acción de Gracias", pronunciation: "/ˌθæŋksˈɡɪvɪŋ/" }], exercises: [{ type: "multiple-choice", question: "When is Independence Day?", options: ["July 4", "December 25"], correct: 0 }] } },
   72: { id: 72, title: "Literatura en Inglés", level: "B1", duration: "30 min", difficulty: "Avanzado", rating: 4.6, type: "Cultural", objectives: ["Autores y obras"], content: { vocabulary: [{ english: "Novel", spanish: "Novela", pronunciation: "/ˈnɑvəl/" }], exercises: [{ type: "pronunciation", word: "Shakespeare", pronunciation: "/ˈʃeɪkspɪr/" }] } },
   73: { id: 73, title: "Debates y Opiniones", level: "B1", duration: "32 min", difficulty: "Avanzado", rating: 4.7, type: "Conversación", objectives: ["Expresar y defender opiniones"], content: { vocabulary: [{ english: "In my opinion", spanish: "En mi opinión", pronunciation: "/ɪn maɪ əˈpɪnjən/" }], exercises: [{ type: "fill-blank", question: "I ___ agree with you", answer: "don't" }] } },
-  74: { id: 74, title: "Job Interviews in English", level: "B1", duration: "35 min", difficulty: "Avanzado", rating: 4.9, type: "Conversación", objectives: ["Preparar entrevistas de trabajo", "Responder preguntas comunes", "Hablar de experiencia laboral", "Presentarse profesionalmente"], content: { vocabulary: [{ english: "Strengths", spanish: "Fortalezas", pronunciation: "/strɛŋθs/" }, { english: "Weaknesses", spanish: "Debilidades", pronunciation: "/ˈwiknəsɪz/" }, { english: "Experience", spanish: "Experiencia", pronunciation: "/ɪkˈspɪriəns/" }, { english: "Qualification", spanish: "Calificación", pronunciation: "/ˌkwɑləfəˈkeɪʃən/" }, { english: "Tell me about yourself", spanish: "Háblame de ti", pronunciation: "/tɛl mi əˈbaʊt jʊrˈsɛlf/" }, { english: "Why should we hire you?", spanish: "¿Por qué deberíamos contratarte?", pronunciation: "/waɪ ʃʊd wi haɪr ju/" }], exercises: [{ type: "multiple-choice", question: "What are your ___?", options: ["strengths", "strong", "strength"], correct: 0 }, { type: "fill-blank", question: "I have 5 years of ___", answer: "experience" }] } },
+  74: { 
+    id: 74, title: "Job Interviews in English", level: "B1", duration: "35 min", difficulty: "Avanzado", rating: 4.9, type: "Conversación", 
+    objectives: ["Preparar entrevistas de trabajo", "Responder preguntas comunes", "Hablar de experiencia laboral", "Presentarse profesionalmente"], 
+    content: { 
+      vocabulary: [
+        { english: "Strengths", spanish: "Fortalezas", pronunciation: "/strɛŋθs/" }, 
+        { english: "Weaknesses", spanish: "Debilidades", pronunciation: "/ˈwiknəsɪz/" }, 
+        { english: "Experience", spanish: "Experiencia", pronunciation: "/ɪkˈspɪriəns/" }, 
+        { english: "Qualification", spanish: "Calificación", pronunciation: "/ˌkwɑləfəˈkeɪʃən/" }, 
+        { english: "Skills", spanish: "Habilidades", pronunciation: "/skɪlz/" },
+        { english: "Resume", spanish: "Currículum", pronunciation: "/ˈrɛzəˌmeɪ/" },
+        { english: "Background", spanish: "Antecedentes", pronunciation: "/ˈbækˌɡraʊnd/" },
+        { english: "Position", spanish: "Puesto", pronunciation: "/pəˈzɪʃən/" },
+        { english: "Salary", spanish: "Salario", pronunciation: "/ˈsæləri/" },
+        { english: "Benefits", spanish: "Beneficios", pronunciation: "/ˈbɛnəfɪts/" },
+        { english: "Team player", spanish: "Trabajador en equipo", pronunciation: "/tim ˈpleɪər/" },
+        { english: "Tell me about yourself", spanish: "Háblame de ti", pronunciation: "/tɛl mi əˈbaʊt jʊrˈsɛlf/" }, 
+        { english: "Why should we hire you?", spanish: "¿Por qué deberíamos contratarte?", pronunciation: "/waɪ ʃʊd wi haɪr ju/" },
+        { english: "What are your goals?", spanish: "¿Cuáles son tus metas?", pronunciation: "/wʌt ɑr jʊr ɡoʊlz/" },
+        { english: "Where do you see yourself?", spanish: "¿Dónde te ves?", pronunciation: "/wɛr du ju si jʊrˈsɛlf/" },
+        { english: "Why do you want this job?", spanish: "¿Por qué quieres este trabajo?", pronunciation: "/waɪ du ju wɑnt ðɪs dʒɑb/" },
+        { english: "I'm a hard worker", spanish: "Soy trabajador", pronunciation: "/aɪm ə hɑrd ˈwɜrkər/" }
+      ], 
+      exercises: [
+        { type: "multiple-choice", question: "What are your ___?", options: ["strengths", "strong", "strength"], correct: 0 }, 
+        { type: "fill-blank", question: "I have 5 years of ___", answer: "experience" },
+        { type: "multiple-choice", question: "Please send me your ___", options: ["resume", "résumé", "CV"], correct: 0 },
+        { type: "fill-blank", question: "I'm a good team ___", answer: "player" },
+        { type: "fill-blank", question: "What ___ do you have?", answer: "skills" },
+        { type: "pronunciation", word: "Qualification", pronunciation: "/ˌkwɑləfəˈkeɪʃən/" }
+      ] 
+    } 
+  },
   75: { id: 75, title: "Verbos Compuestos Avanzado", level: "B1", duration: "31 min", difficulty: "Avanzado", rating: 4.6, type: "Gramática", objectives: ["Phrasal verbs complejos"], content: { vocabulary: [{ english: "Put up with", spanish: "Tolerar", pronunciation: "/pʊt ʌp wɪð/" }], exercises: [{ type: "fill-blank", question: "I can't put ___ with this", answer: "up" }] } },
   76: { id: 76, title: "Vocabulario Académico", level: "B1", duration: "29 min", difficulty: "Avanzado", rating: 4.7, type: "Vocabulario", objectives: ["Universidad y estudios"], content: { vocabulary: [{ english: "Thesis", spanish: "Tesis", pronunciation: "/ˈθisɪs/" }], exercises: [{ type: "pronunciation", word: "Research", pronunciation: "/rɪˈsɜrtʃ/" }] } },
   77: { id: 77, title: "Inglés Científico", level: "B1", duration: "33 min", difficulty: "Avanzado", rating: 4.5, type: "Vocabulario", objectives: ["Términos científicos"], content: { vocabulary: [{ english: "Hypothesis", spanish: "Hipótesis", pronunciation: "/haɪˈpɑθəsɪs/" }], exercises: [{ type: "multiple-choice", question: "A scientific ___", options: ["experiment", "experience"], correct: 0 }] } },
