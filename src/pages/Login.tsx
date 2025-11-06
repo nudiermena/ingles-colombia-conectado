@@ -40,12 +40,6 @@ const Login = () => {
             : error.message,
           variant: "destructive"
         });
-      } else {
-        toast({
-          title: "¡Bienvenido!",
-          description: "Has iniciado sesión correctamente"
-        });
-        navigate('/');
       }
     } catch (error: any) {
       toast({
