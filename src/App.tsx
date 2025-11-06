@@ -10,6 +10,7 @@ import Certificates from "./pages/Certificates";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Demo from "./pages/Demo";
+import TenantSelect from "./pages/TenantSelect";
 import LevelA1 from "./pages/LevelA1";
 import LevelA2 from "./pages/LevelA2";
 import LevelB1 from "./pages/LevelB1";
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/certificados" element={<Certificates />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/tenant-select" element={<TenantSelect />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/nivel/a1" element={<LevelA1 />} />
           <Route path="/nivel/a2" element={<LevelA2 />} />
