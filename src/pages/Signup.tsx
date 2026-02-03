@@ -1,17 +1,23 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BookOpen, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BookOpen, Eye, EyeOff, Mail, Lock, User, AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useInvitationAcceptance } from "@/hooks/useInvitations";
+import { useTenant } from "@/hooks/useTenant";
 
 const Signup = () => {
+  const [searchParams] = useSearchParams();
+  const invitationToken = searchParams.get('invitation');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [invitation, setInvitation] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,12 +29,64 @@ const Signup = () => {
   const { signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { getInvitationByToken, acceptInvitation } = useInvitationAcceptance();
+  const { refreshTenants } = useTenant(user?.id);
 
   useEffect(() => {
     if (user) {
+      if (invitationToken) {
+        handleAcceptInvitationAfterSignup();
+      } else {
+        // Will redirect based on role after tenant is loaded
+        // Navigation handled by Index page or Login redirect logic
+        navigate('/');
+      }
+    }
+  }, [user, invitationToken]);
+
+  useEffect(() => {
+    if (invitationToken) {
+      loadInvitation();
+    }
+  }, [invitationToken]);
+
+  const loadInvitation = async () => {
+    if (!invitationToken) return;
+    try {
+      const inv = await getInvitationByToken(invitationToken);
+      if (inv) {
+        setInvitation(inv);
+        setFormData(prev => ({ ...prev, email: inv.email }));
+      }
+    } catch (err) {
+      console.error('Error loading invitation:', err);
+    }
+  };
+
+  const handleAcceptInvitationAfterSignup = async () => {
+    if (!invitationToken || !user || !invitation) return;
+    
+    try {
+      const success = await acceptInvitation(invitationToken, user.id);
+      if (success) {
+        await refreshTenants();
+        toast({
+          title: "¡Bienvenido!",
+          description: "Tu cuenta ha sido creada y has sido agregado a la organización",
+        });
+        
+        // Redirect based on role
+        if (invitation.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/student');
+        }
+      }
+    } catch (err: any) {
+      console.error('Error accepting invitation:', err);
       navigate('/');
     }
-  }, [user, navigate]);
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -102,9 +160,23 @@ const Signup = () => {
         <Card className="hover:shadow-card transition-all duration-300">
           <CardHeader className="space-y-4">
             <CardTitle className="text-2xl text-center">Crear Cuenta</CardTitle>
-            <p className="text-muted-foreground text-center">
-              Únete a miles de estudiantes aprendiendo inglés
-            </p>
+            {invitation ? (
+              <div className="space-y-2">
+                <p className="text-muted-foreground text-center">
+                  Has sido invitado a unirte a una organización
+                </p>
+                <div className="flex items-center justify-center gap-2 p-3 bg-primary/10 rounded-lg">
+                  <AlertCircle className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium">
+                    {invitation.email} - {invitation.role === 'admin' ? 'Administrador' : invitation.role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-center">
+                Únete a miles de estudiantes aprendiendo inglés
+              </p>
+            )}
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -139,6 +211,7 @@ const Signup = () => {
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className="pl-10"
                     required
+                    disabled={!!invitation}
                   />
                 </div>
               </div>

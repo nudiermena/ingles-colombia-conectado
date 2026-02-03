@@ -20,15 +20,26 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import Admin from "./pages/Admin";
+import AcceptInvitation from "./pages/AcceptInvitation";
+import StudentDashboard from "./pages/StudentDashboard";
+import SeedLessons from "./pages/SeedLessons";
+import PlacementTest from "./pages/PlacementTest";
 
 const queryClient = new QueryClient();
+
+// React Router v7 future flags
+const future = {
+  v7_startTransition: true,
+  v7_relativeSplatPath: true,
+} as const;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter future={future}>
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -38,6 +49,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/demo" element={<Demo />} />
+            <Route path="/tenant-select" element={<TenantSelect />} />
             <Route path="/nivel/a1" element={<LevelA1 />} />
             <Route path="/nivel/a2" element={<LevelA2 />} />
             <Route path="/nivel/b1" element={<LevelB1 />} />
@@ -45,6 +57,11 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/student" element={<StudentDashboard />} />
+            <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
+            <Route path="/seed-lessons" element={<SeedLessons />} />
+            <Route path="/placement-test" element={<PlacementTest />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

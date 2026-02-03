@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 
 const TenantSelect = () => {
   const { user, loading: authLoading } = useAuth();
-  const { tenants, loading: tenantsLoading, createTenant, switchTenant } = useTenant(user?.id);
+  const { tenants, loading: tenantsLoading, createTenant, switchTenant, getRoleInTenant } = useTenant(user?.id);
   const [showCreate, setShowCreate] = useState(false);
   const [tenantName, setTenantName] = useState("");
   const [tenantSlug, setTenantSlug] = useState("");
@@ -25,12 +25,41 @@ const TenantSelect = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Auto-select and redirect if user has only one tenant
+  useEffect(() => {
+    if (!authLoading && !tenantsLoading && user && tenants.length === 1) {
+      const singleTenant = tenants[0];
+      const role = getRoleInTenant(singleTenant.id);
+      
+      // Small delay to ensure tenant is properly set
+      const timer = setTimeout(() => {
+        // Automatically select the tenant
+        switchTenant(singleTenant);
+        
+        // Redirect based on role
+        if (role === 'admin') {
+          navigate('/admin', { 
+            replace: true,
+            state: { selectedTenant: singleTenant }
+          });
+        } else if (role === 'student' || role === 'teacher') {
+          navigate('/student', { 
+            replace: true,
+            state: { selectedTenant: singleTenant }
+          });
+        }
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [user, tenants, authLoading, tenantsLoading, navigate, getRoleInTenant, switchTenant]);
+
   const handleCreateTenant = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
 
     try {
-      const { error } = await createTenant(tenantName, tenantSlug);
+      const { data: newTenant, error } = await createTenant(tenantName, tenantSlug);
       
       if (error) {
         toast({
@@ -38,14 +67,21 @@ const TenantSelect = () => {
           description: error.message,
           variant: "destructive"
         });
-      } else {
+      } else if (newTenant) {
         toast({
           title: "¡Organización creada!",
           description: "Tu organización ha sido creada exitosamente"
         });
+        
+        // Switch to the newly created tenant and redirect
         setShowCreate(false);
         setTenantName("");
         setTenantSlug("");
+        
+        // Wait a moment for the tenant to be added to the list
+        setTimeout(() => {
+          handleSelectTenant(newTenant);
+        }, 200);
       }
     } catch (error: any) {
       toast({
@@ -59,8 +95,35 @@ const TenantSelect = () => {
   };
 
   const handleSelectTenant = (tenant: any) => {
+    // Get the user's role in this tenant before switching
+    const role = getRoleInTenant(tenant.id);
+    
+    // Switch tenant (updates state and localStorage)
     switchTenant(tenant);
-    navigate('/');
+    
+    // Show success message
+    toast({
+      title: "Organización seleccionada",
+      description: `Has seleccionado ${tenant.name}`,
+    });
+    
+    // Navigate with tenant in state so it's available immediately
+    if (role === 'admin') {
+      navigate('/admin', { 
+        replace: true,
+        state: { selectedTenant: tenant }
+      });
+    } else if (role === 'student' || role === 'teacher') {
+      navigate('/student', { 
+        replace: true,
+        state: { selectedTenant: tenant }
+      });
+    } else {
+      navigate('/', { 
+        replace: true,
+        state: { selectedTenant: tenant }
+      });
+    }
   };
 
   if (authLoading || tenantsLoading) {
@@ -91,25 +154,59 @@ const TenantSelect = () => {
         {!showCreate ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              {tenants.map((tenant) => (
-                <Card
-                  key={tenant.id}
-                  className="cursor-pointer hover:shadow-card hover:scale-105 transition-all"
-                  onClick={() => handleSelectTenant(tenant)}
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                        <Building2 className="w-6 h-6 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-lg">{tenant.name}</h3>
-                        <p className="text-sm text-muted-foreground">@{tenant.slug}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+              {tenants.length === 0 ? (
+                <div className="col-span-2 text-center py-8 text-muted-foreground">
+                  <Building2 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>No tienes organizaciones disponibles</p>
+                  <p className="text-sm mt-2">Crea una nueva organización para comenzar</p>
+                </div>
+              ) : (
+                    tenants.map((tenant) => {
+                      const role = getRoleInTenant(tenant.id);
+                      return (
+                    <Card
+                      key={tenant.id}
+                      className="cursor-pointer hover:shadow-lg hover:scale-105 transition-all border-2 hover:border-primary"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectTenant(tenant);
+                          }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleSelectTenant(tenant);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Seleccionar ${tenant.name}`}
+                    >
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                            <Building2 className="w-6 h-6 text-primary" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{tenant.name}</h3>
+                            <p className="text-sm text-muted-foreground">@{tenant.slug}</p>
+                            {role ? (
+                              <p className="text-xs text-primary mt-1">
+                                Rol: {role === 'admin' ? 'Administrador' : role === 'teacher' ? 'Profesor' : 'Estudiante'}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-warning mt-1">
+                                ⚠️ No se encontró rol para este tenant
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
 
             <Button

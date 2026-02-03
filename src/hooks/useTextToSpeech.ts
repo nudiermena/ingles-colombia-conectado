@@ -18,17 +18,28 @@ export const useTextToSpeech = () => {
     };
   }, []);
 
-  const speak = (text: string, lang: string = 'en-US') => {
+  const speak = (text: string, lang: string = 'en-US', rate: number = 0.9) => {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
+      utterance.rate = rate;
+      utterance.pitch = 1.5;
+      utterance.volume = 1;
       
-      const voice = voices.find(v => v.lang.startsWith(lang.split('-')[0]));
-      if (voice) utterance.voice = voice;
+      // Find the best voice for the language
+      const langPrefix = lang.split('-')[0];
+      let voice = voices.find(v => v.lang.startsWith(langPrefix));
+      
+      // Prefer native voices (English for en, Spanish for es)
+      if (!voice) {
+        voice = voices.find(v => v.lang === lang);
+      }
+      
+      if (voice) {
+        utterance.voice = voice;
+      }
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
@@ -39,9 +50,11 @@ export const useTextToSpeech = () => {
   };
 
   const stop = () => {
-    window.speechSynthesis.cancel();
-    setIsSpeaking(false);
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   };
 
-  return { speak, stop, isSpeaking };
+  return { speak, stop, isSpeaking, voices };
 };

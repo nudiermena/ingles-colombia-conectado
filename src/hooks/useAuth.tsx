@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Bienvenido",
         description: "Has iniciado sesión exitosamente",
       });
-      navigate('/');
+      // Navigation will be handled by the component based on role
     }
 
     return { error };
@@ -96,7 +96,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Cuenta creada",
         description: "Tu cuenta ha sido creada exitosamente",
       });
-      navigate('/');
+      // Navigation will be handled by the component based on role
+      // For new users without invitation, they'll need to select/create a tenant
     }
 
     return { error };

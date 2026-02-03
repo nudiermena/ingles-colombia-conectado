@@ -1,9 +1,14 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Award, Download, Share2, Calendar, CheckCircle2, Lock } from "lucide-react";
+import { Award, Download, Share2, Calendar, CheckCircle2, Lock, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { generateCertificatePDF } from "@/lib/generateCertificatePDF";
+import { useToast } from "@/hooks/use-toast";
 
 const certificates = [
   {
@@ -39,6 +44,79 @@ const certificates = [
 ];
 
 const Certificates = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [userProfile, setUserProfile] = useState<{ fullName?: string; email?: string } | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Get user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('user_id', user.id)
+          .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Error fetching profile:', profileError);
+        }
+
+        setUserProfile({
+          fullName: profile?.full_name || user.user_metadata?.full_name || undefined,
+          email: user.email || undefined,
+        });
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        setUserProfile({
+          fullName: user.user_metadata?.full_name || undefined,
+          email: user.email || undefined,
+        });
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
+
+  const handleDownloadPDF = async (certificate: typeof certificates[0]) => {
+    if (!certificate.dateEarned) {
+      toast({
+        title: "Error",
+        description: "Este certificado aún no ha sido completado",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingPDF(certificate.id);
+    
+    try {
+      const userData = {
+        fullName: userProfile?.fullName,
+        email: userProfile?.email || user?.email,
+      };
+
+      generateCertificatePDF(certificate, userData);
+      
+      toast({
+        title: "Certificado descargado",
+        description: "El certificado PDF se ha descargado exitosamente",
+      });
+    } catch (error: any) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo generar el certificado PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -155,9 +233,24 @@ const Certificates = () => {
                 <div className="flex gap-2">
                   {cert.status === 'earned' && (
                     <>
-                      <Button variant="success" size="sm" className="flex-1">
-                        <Download className="w-4 h-4 mr-2" />
-                        Descargar
+                      <Button 
+                        variant="success" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleDownloadPDF(cert)}
+                        disabled={isGeneratingPDF === cert.id}
+                      >
+                        {isGeneratingPDF === cert.id ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Generando...
+                          </>
+                        ) : (
+                          <>
+                            <Download className="w-4 h-4 mr-2" />
+                            Descargar PDF
+                          </>
+                        )}
                       </Button>
                       <Button variant="outline" size="sm">
                         <Share2 className="w-4 h-4" />

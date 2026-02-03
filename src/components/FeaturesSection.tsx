@@ -54,15 +54,15 @@ const FeaturesSection = () => {
   return (
     <section className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="text-center space-y-4 mb-16">
+        <div className="text-center space-y-4 mb-16 group">
           <Badge variant="secondary" className="w-fit mx-auto">
             <Zap className="w-4 h-4 mr-2" />
             Características Únicas
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground">
-            Una experiencia de aprendizaje 
-            <span className="text-transparent bg-gradient-primary bg-clip-text">
-              {" "}revolucionaria
+            Una experiencia de aprendizaje{" "}
+            <span className="text-transparent bg-gradient-primary bg-clip-text hover:text-primary transition-colors cursor-default">
+              revolucionaria
             </span>
           </h2>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
@@ -77,25 +77,25 @@ const FeaturesSection = () => {
               key={index} 
               className="relative overflow-hidden border-border hover:shadow-card transition-all duration-300 group hover:scale-105"
             >
-              <CardHeader className="space-y-4">
+              <CardHeader className="space-y-4 relative z-10">
                 <div className="w-12 h-12 bg-gradient-primary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <feature.icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="space-y-2">
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
+                  <CardTitle className="text-lg group-hover:text-foreground transition-colors">{feature.title}</CardTitle>
                   <Badge variant="outline" className="w-fit">
                     {feature.highlight}
                   </Badge>
                 </div>
               </CardHeader>
               
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
+              <CardContent className="relative z-10">
+                <p className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">
                   {feature.description}
                 </p>
               </CardContent>
 
-              <div className="absolute inset-0 bg-gradient-card opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-card opacity-0 group-hover:opacity-30 transition-opacity pointer-events-none z-0" />
             </Card>
           ))}
         </div>

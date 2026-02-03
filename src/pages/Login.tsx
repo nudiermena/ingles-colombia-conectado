@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BookOpen, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -15,15 +16,31 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   
-  const { signIn, user } = useAuth();
+  const { signIn, user, loading: authLoading } = useAuth();
+  const { currentTenant, getRoleInTenant, loading: tenantLoading } = useTenant(user?.id);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) {
-      navigate('/');
+    // Wait for auth and tenant data to load
+    if (authLoading || tenantLoading) return;
+
+    if (user && currentTenant) {
+      // Redirect based on role
+      const role = getRoleInTenant(currentTenant.id);
+      if (role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (role === 'student' || role === 'teacher') {
+        navigate('/student', { replace: true });
+      } else {
+        navigate('/tenant-select', { replace: true });
+      }
+    } else if (user) {
+      // User logged in but no tenant selected - redirect to tenant-select
+      // TenantSelect will auto-select if there's only one tenant
+      navigate('/tenant-select', { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, currentTenant, authLoading, tenantLoading, navigate, getRoleInTenant]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +58,7 @@ const Login = () => {
           variant: "destructive"
         });
       }
+      // Navigation will be handled by useEffect when user state updates
     } catch (error: any) {
       toast({
         title: "Error",

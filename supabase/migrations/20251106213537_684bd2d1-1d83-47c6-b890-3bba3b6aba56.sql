@@ -4,6 +4,7 @@ CREATE TYPE public.app_role AS ENUM ('admin', 'teacher', 'student');
 -- Create tenants/organizations table
 CREATE TABLE public.tenants (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   name TEXT NOT NULL,
   slug TEXT NOT NULL UNIQUE,
   logo_url TEXT,
@@ -33,6 +34,7 @@ CREATE TABLE public.profiles (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL UNIQUE,
   full_name TEXT NOT NULL,
+  email text null unique,
   avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()

@@ -47,11 +47,11 @@ const LevelCard = ({
         </div>
       )}
       
-      <CardHeader className="space-y-4">
+      <CardHeader className="space-y-4 relative z-10">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <p className="text-2xl font-bold text-primary">{level}</p>
-            <CardTitle className="text-lg">{title}</CardTitle>
+            <p className="text-2xl font-bold text-primary group-hover:text-primary">{level}</p>
+            <CardTitle className="text-lg group-hover:text-foreground">{title}</CardTitle>
           </div>
           {isLocked && <Lock className="w-5 h-5 text-muted-foreground" />}
         </div>
@@ -61,20 +61,20 @@ const LevelCard = ({
         </Badge>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        <p className="text-muted-foreground leading-relaxed">{description}</p>
+      <CardContent className="space-y-6 relative z-10">
+        <p className="text-muted-foreground leading-relaxed group-hover:text-foreground transition-colors">{description}</p>
         
         {!isLocked && progress > 0 && (
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progreso</span>
-              <span className="font-medium">{progress}%</span>
+              <span className="text-muted-foreground group-hover:text-foreground transition-colors">Progreso</span>
+              <span className="font-medium group-hover:text-foreground transition-colors">{progress}%</span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
         )}
 
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
           <div className="flex items-center gap-1">
             <BookOpen className="w-4 h-4" />
             <span>{lessons} lecciones</span>
@@ -87,7 +87,7 @@ const LevelCard = ({
 
         <Button 
           variant={isLocked ? "outline" : "lesson"} 
-          className="w-full"
+          className="w-full relative z-10"
           disabled={isLocked}
           asChild={!isLocked}
         >
@@ -101,7 +101,7 @@ const LevelCard = ({
         </Button>
       </CardContent>
 
-      <div className="absolute inset-0 bg-gradient-card opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-card opacity-0 group-hover:opacity-30 transition-opacity pointer-events-none z-0" />
     </Card>
   );
 };

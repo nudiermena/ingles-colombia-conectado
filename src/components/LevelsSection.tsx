@@ -1,5 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { GraduationCap, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import LevelCard from "./LevelCard";
 
 const levels = [
@@ -36,6 +38,15 @@ const levels = [
 ];
 
 const LevelsSection = () => {
+  const navigate = useNavigate();
+
+  const handlePlacementTest = () => {
+    // Navigate to placement test page
+    // For now, we'll create a simple modal or redirect to a test page
+    // You can replace this with your actual placement test route
+    navigate('/placement-test');
+  };
+
   return (
     <section className="py-20">
       <div className="container mx-auto px-4">
@@ -66,9 +77,14 @@ const LevelsSection = () => {
           <p className="text-muted-foreground">
             ¿No estás seguro de tu nivel actual?
           </p>
-          <button className="text-primary font-semibold hover:underline">
-            Toma nuestro test de nivelación gratuito →
-          </button>
+          <Button 
+            variant="link" 
+            className="text-primary font-semibold hover:text-primary/80 transition-colors"
+            onClick={handlePlacementTest}
+          >
+            Toma nuestro test de nivelación gratuito
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
       </div>
     </section>
