@@ -15,7 +15,7 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { signIn, user, loading: authLoading } = useAuth();
   const { currentTenant, getRoleInTenant, loading: tenantLoading } = useTenant(user?.id);
   const { toast } = useToast();
@@ -28,9 +28,9 @@ const Login = () => {
     if (user && currentTenant) {
       // Redirect based on role
       const role = getRoleInTenant(currentTenant.id);
-      if (role === 'admin') {
+      if (role === 'admin' || role === 'teacher') {
         navigate('/admin', { replace: true });
-      } else if (role === 'student' || role === 'teacher') {
+      } else if (role === 'student') {
         navigate('/student', { replace: true });
       } else {
         navigate('/tenant-select', { replace: true });
@@ -48,12 +48,12 @@ const Login = () => {
 
     try {
       const { error } = await signIn(email, password);
-      
+
       if (error) {
         toast({
           title: "Error al iniciar sesión",
-          description: error.message === "Invalid login credentials" 
-            ? "Correo o contraseña incorrectos" 
+          description: error.message === "Invalid login credentials"
+            ? "Correo o contraseña incorrectos"
             : error.message,
           variant: "destructive"
         });
@@ -142,8 +142,8 @@ const Login = () => {
                     Recordarme
                   </Label>
                 </div>
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
                   ¿Olvidaste tu contraseña?
@@ -151,10 +151,10 @@ const Login = () => {
               </div>
 
               {/* Login Button */}
-              <Button 
+              <Button
                 type="submit"
-                variant="hero" 
-                className="w-full" 
+                variant="hero"
+                className="w-full"
                 size="lg"
                 disabled={isLoading}
               >
@@ -167,13 +167,13 @@ const Login = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border"></div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
+              {/* <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">o continúa con</span>
-              </div>
+              </div> */}
             </div>
 
             {/* Social Login */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" className="w-full">
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -189,7 +189,7 @@ const Login = () => {
                 </svg>
                 Facebook
               </Button>
-            </div>
+            </div> */}
 
             {/* Sign Up Link */}
             <div className="text-center text-sm">

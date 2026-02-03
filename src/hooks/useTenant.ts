@@ -58,7 +58,7 @@ export const useTenant = (userId: string | undefined) => {
     }
 
     const savedTenantId = localStorage.getItem('currentTenantId');
-    
+
     if (savedTenantId) {
       const tenant = tenants.find(t => t.id === savedTenantId);
       if (tenant) {
@@ -101,20 +101,40 @@ export const useTenant = (userId: string | undefined) => {
 
       setUserRoles(rolesData || []);
 
-      // Fetch tenants only if user has roles
-      const tenantIds = rolesData?.map(role => role.tenant_id).filter(Boolean) || [];
-      
-      if (tenantIds.length === 0) {
-        setTenants([]);
-        setCurrentTenant(null);
-        setLoading(false);
-        return;
-      }
+      // Check if user is admin in ANY tenant - if so, they are a platform admin and see ALL tenants
+      const isPlatformAdmin = rolesData?.some(role => role.role === 'admin');
 
-      const { data: tenantsData, error: tenantsError } = await supabase
-        .from('tenants')
-        .select('*')
-        .in('id', tenantIds);
+      let tenantsData: Tenant[] | null = [];
+      let tenantsError = null;
+
+      if (isPlatformAdmin) {
+        // Fetch ALL tenants
+        const result = await supabase
+          .from('tenants')
+          .select('*')
+          .order('name');
+
+        tenantsData = result.data;
+        tenantsError = result.error;
+      } else {
+        // Fetch tenants only if user has roles
+        const tenantIds = rolesData?.map(role => role.tenant_id).filter(Boolean) || [];
+
+        if (tenantIds.length === 0) {
+          setTenants([]);
+          setCurrentTenant(null);
+          setLoading(false);
+          return;
+        }
+
+        const result = await supabase
+          .from('tenants')
+          .select('*')
+          .in('id', tenantIds);
+
+        tenantsData = result.data;
+        tenantsError = result.error;
+      }
 
       if (tenantsError) {
         console.error('Error fetching tenants:', tenantsError);
@@ -198,11 +218,11 @@ export const useTenant = (userId: string | undefined) => {
       if (error) {
         // If we get a 403, the INSERT policy hasn't been set up
         if (error.code === '42501' || error.message?.includes('permission denied')) {
-          return { 
+          return {
             error: new Error(
               'No tienes permisos para crear organizaciones. ' +
               'Por favor, contacta al administrador o ejecuta la migración de base de datos.'
-            ) 
+            )
           };
         }
         return { error };
@@ -231,6 +251,10 @@ export const useTenant = (userId: string | undefined) => {
   };
 
   const getRoleInTenant = (tenantId: string): 'admin' | 'teacher' | 'student' | null => {
+    // Check if user is admin in ANY tenant (Platform Admin)
+    const isPlatformAdmin = userRoles.some(r => r.role === 'admin');
+    if (isPlatformAdmin) return 'admin';
+
     const role = userRoles.find(r => r.tenant_id === tenantId);
     return role?.role || null;
   };

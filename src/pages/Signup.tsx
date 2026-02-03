@@ -65,7 +65,7 @@ const Signup = () => {
 
   const handleAcceptInvitationAfterSignup = async () => {
     if (!invitationToken || !user || !invitation) return;
-    
+
     try {
       const success = await acceptInvitation(invitationToken, user.id);
       if (success) {
@@ -74,9 +74,9 @@ const Signup = () => {
           title: "¡Bienvenido!",
           description: "Tu cuenta ha sido creada y has sido agregado a la organización",
         });
-        
+
         // Redirect based on role
-        if (invitation.role === 'admin') {
+        if (invitation.role === 'admin' || invitation.role === 'teacher') {
           navigate('/admin');
         } else {
           navigate('/student');
@@ -117,7 +117,7 @@ const Signup = () => {
 
     try {
       const { error } = await signUp(formData.email, formData.password, formData.name);
-      
+
       if (error) {
         toast({
           title: "Error al crear cuenta",
@@ -259,8 +259,8 @@ const Signup = () => {
 
               {/* Terms Checkbox */}
               <div className="flex items-start space-x-2">
-                <Checkbox 
-                  id="terms" 
+                <Checkbox
+                  id="terms"
                   checked={formData.agreeTerms}
                   onCheckedChange={(checked) => handleInputChange('agreeTerms', checked as boolean)}
                 />
@@ -277,10 +277,10 @@ const Signup = () => {
               </div>
 
               {/* Sign Up Button */}
-              <Button 
+              <Button
                 type="submit"
-                variant="hero" 
-                className="w-full" 
+                variant="hero"
+                className="w-full"
                 size="lg"
                 disabled={!formData.agreeTerms || isLoading}
               >
@@ -293,13 +293,13 @@ const Signup = () => {
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border"></div>
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
+              {/* <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">o regístrate con</span>
-              </div>
+              </div> */}
             </div>
 
             {/* Social Registration */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" className="w-full">
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -315,7 +315,7 @@ const Signup = () => {
                 </svg>
                 Facebook
               </Button>
-            </div>
+            </div> */}
 
             {/* Login Link */}
             <div className="text-center text-sm">
