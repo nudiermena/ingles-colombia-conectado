@@ -30,6 +30,7 @@ import type { Tenant } from "@/hooks/useTenant";
 
 interface TenantsManagementProps {
   currentTenant: Tenant | null;
+  currentUserRole?: 'admin' | 'teacher' | 'student' | null;
   onSwitchToLessons?: (tenantId: string) => void;
 }
 
@@ -38,7 +39,7 @@ interface TenantLessonsStats {
   byLevel: Record<string, number>;
 }
 
-const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManagementProps) => {
+const TenantsManagement = ({ currentTenant, currentUserRole, onSwitchToLessons }: TenantsManagementProps) => {
   const { user } = useAuth();
   const { tenants: userTenants, refreshTenants, createTenant } = useTenant(user?.id);
   const { toast } = useToast();
@@ -116,8 +117,8 @@ const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManageme
           .eq('role', 'admin')
           .limit(1);
 
-        if (adminRoles && adminRoles.length > 0) {
-          // User is an admin, fetch ALL tenants
+        if (adminRoles && adminRoles.length > 0 && currentUserRole === 'admin') {
+          // User is an admin, fetch ALL tenants (teachers only see their own)
           const { data: allTenantsData, error } = await supabase
             .from('tenants')
             .select('*')
@@ -138,7 +139,7 @@ const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManageme
     };
 
     fetchAllTenants();
-  }, [user, userTenants]);
+  }, [user, userTenants, currentUserRole]);
 
   // Fetch lessons stats for all tenants
   useEffect(() => {
@@ -379,9 +380,12 @@ const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManageme
               Gestión de Organizaciones
             </CardTitle>
             <CardDescription>
-              Administra las organizaciones de tu plataforma
+              {currentUserRole === 'teacher'
+                ? 'Tu organización'
+                : 'Administra las organizaciones de tu plataforma'}
             </CardDescription>
           </div>
+          {currentUserRole === 'admin' && (
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleCreate}>
@@ -450,6 +454,7 @@ const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManageme
               </form>
             </DialogContent>
           </Dialog>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -523,14 +528,16 @@ const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManageme
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleAssignLessons(tenant)}
-                          title="Asignar lecciones"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </Button>
+                        {currentUserRole === 'admin' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAssignLessons(tenant)}
+                            title="Asignar lecciones"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        )}
                         {onSwitchToLessons && isUserTenant && (
                           <Button
                             variant="ghost"
@@ -541,7 +548,7 @@ const TenantsManagement = ({ currentTenant, onSwitchToLessons }: TenantsManageme
                             <BookOpen className="w-4 h-4" />
                           </Button>
                         )}
-                        {isUserTenant && (
+                        {isUserTenant && currentUserRole === 'admin' && (
                           <>
                             <Button
                               variant="ghost"

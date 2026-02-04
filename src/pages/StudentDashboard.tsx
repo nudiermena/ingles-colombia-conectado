@@ -275,7 +275,7 @@ const StudentDashboard = () => {
                         onClick={() => {
                           if (lesson?.id && activeTenant) {
                             navigate(`/leccion/${lesson.id}`, {
-                              state: { selectedTenant: activeTenant }
+                              state: { selectedTenant: activeTenant, restart: progressPercent === 100 }
                             });
                           } else {
                             console.error('Lesson ID or Tenant is missing:', { lesson, activeTenant });

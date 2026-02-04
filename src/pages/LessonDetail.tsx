@@ -482,11 +482,12 @@ const LessonDetail = () => {
   const { user } = useAuth();
   const { currentTenant, loading: tenantLoading, switchTenant } = useTenant(user?.id);
   
-  // Get tenant from navigation state if available
+  // Get tenant and restart flag from navigation state if available
   const [initialTenant] = useState(() => {
     const state = location.state as { selectedTenant?: any } | null;
     return state?.selectedTenant || null;
   });
+  const shouldRestart = (location.state as { restart?: boolean })?.restart ?? false;
   
   // Use initialTenant if available, otherwise use currentTenant from hook
   const activeTenant = initialTenant || currentTenant;
@@ -525,6 +526,13 @@ const LessonDetail = () => {
   }, [user, activeTenant, tenantLoading, navigate]);
 
   useEffect(() => {
+    // When "Repasar" is clicked, start from the beginning - don't load saved progress
+    if (shouldRestart) {
+      setCurrentStep(0);
+      setCompletedExercises([]);
+      hasLoadedInitialProgress.current = true;
+      return;
+    }
     // Load existing progress only once on initial mount
     // Don't reload if user has manually navigated
     if (existingProgress && lesson && !hasLoadedInitialProgress.current && !userHasNavigated.current) {
@@ -534,7 +542,7 @@ const LessonDetail = () => {
       setCompletedExercises(existingProgress.exercise_results?.completed || []);
       hasLoadedInitialProgress.current = true;
     }
-  }, [existingProgress, lesson]);
+  }, [existingProgress, lesson, shouldRestart]);
 
   // Reset flags when lesson changes
   useEffect(() => {

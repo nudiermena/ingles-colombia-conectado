@@ -46,7 +46,7 @@ const Header = () => {
               <Link to="/certificados" className="text-muted-foreground hover:text-foreground transition-colors">
                 Certificados
               </Link>
-              {isAdmin && (
+              {(isAdmin || isTeacher) && (
                 <Link to="/admin" className="text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
                   <Shield className="w-4 h-4" />
                   Admin
@@ -81,7 +81,7 @@ const Header = () => {
                     Mi Progreso
                   </Link>
                 </DropdownMenuItem>
-                {isAdmin && (
+                {(isAdmin || isTeacher) && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin" className="cursor-pointer">
                       <Shield className="w-4 h-4 mr-2" />

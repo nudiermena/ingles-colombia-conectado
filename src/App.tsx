@@ -19,12 +19,16 @@ import LessonDetail from "./pages/LessonDetail";
 import ForgotPassword from "./pages/ForgotPassword";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import HelpCenter from "./pages/HelpCenter";
+import TeacherGuides from "./pages/TeacherGuides";
+import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import AcceptInvitation from "./pages/AcceptInvitation";
 import StudentDashboard from "./pages/StudentDashboard";
 import SeedLessons from "./pages/SeedLessons";
 import PlacementTest from "./pages/PlacementTest";
+import Courses from "./pages/Courses";
 
 const queryClient = new QueryClient();
 
@@ -57,11 +61,16 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/ayuda" element={<HelpCenter />} />
+            <Route path="/guias-docentes" element={<TeacherGuides />} />
+            <Route path="/cookies" element={<Cookies />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
             <Route path="/seed-lessons" element={<SeedLessons />} />
             <Route path="/placement-test" element={<PlacementTest />} />
+            <Route path="/cursos" element={<Courses />} />
+            <Route path="/course/:id" element={<Courses />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

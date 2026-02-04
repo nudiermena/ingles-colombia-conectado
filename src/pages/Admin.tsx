@@ -6,12 +6,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Shield, Building2, Users, BookOpen, UserCog, Mail, Loader2 } from "lucide-react";
+import { Shield, Building2, Users, BookOpen, UserCog, Mail, Loader2, GraduationCap, FileText, List } from "lucide-react";
 import TenantsManagement from "@/components/admin/TenantsManagement";
 import UsersManagement from "@/components/admin/UsersManagement";
 import LessonsManagement from "@/components/admin/LessonsManagement";
 import RolesManagement from "@/components/admin/RolesManagement";
 import InvitationsManagement from "@/components/admin/InvitationsManagement";
+import CoursesManagement from "@/components/admin/CoursesManagement";
+import UnitsManagement from "@/components/admin/UnitsManagement";
+import UnitContentManagement from "@/components/admin/UnitContentManagement";
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -102,25 +105,38 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-8">
             <TabsTrigger value="invitations" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               <span className="hidden sm:inline">Invitaciones</span>
               <span className="sm:hidden">Inv</span>
             </TabsTrigger>
 
-            {role === 'admin' && (
-              <TabsTrigger value="tenants" className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Organizaciones</span>
-                <span className="sm:hidden">Org</span>
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="tenants" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Organizaciones</span>
+              <span className="sm:hidden">Org</span>
+            </TabsTrigger>
 
             <TabsTrigger value="users" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Usuarios</span>
               <span className="sm:hidden">Usr</span>
+            </TabsTrigger>
+            <TabsTrigger value="courses" className="flex items-center gap-2">
+              <GraduationCap className="w-4 h-4" />
+              <span className="hidden sm:inline">Cursos</span>
+              <span className="sm:hidden">Cur</span>
+            </TabsTrigger>
+            <TabsTrigger value="units" className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="hidden sm:inline">Unidades</span>
+              <span className="sm:hidden">Uni</span>
+            </TabsTrigger>
+            <TabsTrigger value="unit-content" className="flex items-center gap-2">
+              <List className="w-4 h-4" />
+              <span className="hidden sm:inline">Contenido</span>
+              <span className="sm:hidden">Con</span>
             </TabsTrigger>
             <TabsTrigger value="lessons" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -141,28 +157,39 @@ const Admin = () => {
             <InvitationsManagement currentTenant={currentTenant} />
           </TabsContent>
 
-          {role === 'admin' && (
-            <TabsContent value="tenants" className="space-y-4">
-              <TenantsManagement
-                currentTenant={currentTenant}
-                onSwitchToLessons={(tenantId) => {
-                  // Find the tenant and switch to it
-                  const tenant = tenants.find(t => t.id === tenantId);
-                  if (tenant && tenant.id !== currentTenant?.id) {
-                    switchTenant(tenant);
-                  }
-                  // Switch to lessons tab
-                  setActiveTab('lessons');
-                }}
-              />
-            </TabsContent>
-          )}
+          <TabsContent value="tenants" className="space-y-4">
+            <TenantsManagement
+              currentTenant={currentTenant}
+              currentUserRole={role}
+              onSwitchToLessons={(tenantId) => {
+                // Find the tenant and switch to it
+                const tenant = tenants.find(t => t.id === tenantId);
+                if (tenant && tenant.id !== currentTenant?.id) {
+                  switchTenant(tenant);
+                }
+                // Switch to lessons tab
+                setActiveTab('lessons');
+              }}
+            />
+          </TabsContent>
 
           <TabsContent value="users" className="space-y-4">
             <UsersManagement
               currentTenant={currentTenant}
               currentUserRole={role}
             />
+          </TabsContent>
+
+          <TabsContent value="courses" className="space-y-4">
+            <CoursesManagement currentTenant={currentTenant} />
+          </TabsContent>
+
+          <TabsContent value="units" className="space-y-4">
+            <UnitsManagement currentTenant={currentTenant} />
+          </TabsContent>
+
+          <TabsContent value="unit-content" className="space-y-4">
+            <UnitContentManagement currentTenant={currentTenant} />
           </TabsContent>
 
           <TabsContent value="lessons" className="space-y-4">

@@ -17,9 +17,9 @@ const Index = () => {
     if (!loading && !tenantLoading && user && currentTenant) {
       // Redirect logged-in users to their appropriate dashboard
       const role = getRoleInTenant(currentTenant.id);
-      if (role === 'admin') {
+      if (role === 'admin' || role === 'teacher') {
         navigate('/admin');
-      } else if (role === 'student' || role === 'teacher') {
+      } else if (role === 'student') {
         navigate('/student');
       }
     } else if (!loading && user && !currentTenant) {

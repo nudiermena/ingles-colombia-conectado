@@ -26,10 +26,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, Loader2, Trash2, Pencil, Plus } from "lucide-react";
+import { Users, Search, Loader2, Trash2, Pencil, Plus, BookOpen } from "lucide-react";
 import type { Tenant } from "@/hooks/useTenant";
 
 interface UsersManagementProps {
@@ -51,6 +52,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [assignedSummaryByUserId, setAssignedSummaryByUserId] = useState<Record<string, { total: number; byLevel: Record<string, number> }>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -63,6 +65,11 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     full_name: "",
     role: "student" as "admin" | "teacher" | "student",
   });
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [assigningUser, setAssigningUser] = useState<UserWithRole | null>(null);
+  const [availableLessons, setAvailableLessons] = useState<{ id: string; title: string; level: string }[]>([]);
+  const [assignedLessonIds, setAssignedLessonIds] = useState<string[]>([]);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   useEffect(() => {
     if (currentTenant) {
@@ -98,12 +105,33 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
 
       if (profilesError) throw profilesError;
 
+      // Fetch assigned lessons summary for users in this tenant
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('user_lesson_assignments')
+        .select('user_id, lesson_id, lessons(level)')
+        .eq('tenant_id', currentTenant.id)
+        .in('user_id', userIds);
+
+      if (assignmentsError) throw assignmentsError;
+
+      const summary: Record<string, { total: number; byLevel: Record<string, number> }> = {};
+      (assignmentsData || []).forEach((row: any) => {
+        const uid = row.user_id as string;
+        const level = row.lessons?.level as string | undefined;
+        if (!summary[uid]) summary[uid] = { total: 0, byLevel: {} };
+        summary[uid].total += 1;
+        if (level) {
+          summary[uid].byLevel[level] = (summary[uid].byLevel[level] || 0) + 1;
+        }
+      });
+      setAssignedSummaryByUserId(summary);
+
       // Build list from user_roles (source of truth) so new users show up even if profile is delayed
       const usersWithRoles: UserWithRole[] = (rolesData || []).map((roleRow) => {
         const profile = (profilesData || []).find((p) => p.user_id === roleRow.user_id);
         return {
           id: roleRow.user_id,
-          email: roleRow.user_id.substring(0, 8) + '...',
+          email: profile?.email ?? roleRow.user_id.substring(0, 8) + '...',
           full_name: profile?.full_name ?? 'Sin nombre',
           role: roleRow.role ?? null,
           role_id: roleRow.id ?? null,
@@ -283,6 +311,65 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     }
   };
 
+  const handleAssignLessons = async (user: UserWithRole) => {
+    if (!currentTenant) return;
+    setAssigningUser(user);
+    setAssignDialogOpen(true);
+    try {
+      const { data: lessonsData } = await supabase
+        .from('lessons')
+        .select('id, title, level')
+        .eq('tenant_id', currentTenant.id)
+        .eq('is_active', true)
+        .order('level')
+        .order('order_index');
+      setAvailableLessons(lessonsData || []);
+
+      const { data: assignments } = await supabase
+        .from('user_lesson_assignments')
+        .select('lesson_id')
+        .eq('user_id', user.id)
+        .eq('tenant_id', currentTenant.id);
+      setAssignedLessonIds((assignments || []).map(a => a.lesson_id));
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "No se pudieron cargar las lecciones", variant: "destructive" });
+    }
+  };
+
+  const handleSaveAssignments = async () => {
+    if (!currentTenant || !assigningUser) return;
+    setIsAssigning(true);
+    try {
+      const { data: existing } = await supabase
+        .from('user_lesson_assignments')
+        .select('id, lesson_id')
+        .eq('user_id', assigningUser.id)
+        .eq('tenant_id', currentTenant.id);
+      const existingIds = new Set((existing || []).map(e => e.lesson_id));
+      const toAdd = assignedLessonIds.filter(id => !existingIds.has(id));
+      const toRemove = (existing || []).filter(e => !assignedLessonIds.includes(e.lesson_id));
+
+      for (const a of toRemove) {
+        await supabase.from('user_lesson_assignments').delete().eq('id', a.id);
+      }
+      for (const lessonId of toAdd) {
+        await supabase.from('user_lesson_assignments').insert({
+          user_id: assigningUser.id,
+          tenant_id: currentTenant.id,
+          lesson_id: lessonId,
+          assigned_by: currentUser?.id,
+        });
+      }
+      toast({ title: "Lecciones asignadas", description: "Las lecciones han sido actualizadas correctamente" });
+      setAssignDialogOpen(false);
+      setAssigningUser(null);
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "No se pudieron guardar las asignaciones", variant: "destructive" });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -444,6 +531,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                 <TableHead>Nombre</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Rol</TableHead>
+                <TableHead>Lecciones asignadas</TableHead>
                 <TableHead>Fecha de Registro</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -451,7 +539,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     {searchTerm ? "No se encontraron usuarios" : "No hay usuarios registrados"}
                   </TableCell>
                 </TableRow>
@@ -479,10 +567,39 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                       </span>
                     </TableCell>
                     <TableCell>
+                      {(() => {
+                        const s = assignedSummaryByUserId[user.id];
+                        if (!s || s.total === 0) return <span className="text-sm text-muted-foreground">0</span>;
+                        const levels = Object.entries(s.byLevel);
+                        return (
+                          <div className="flex flex-wrap gap-1 justify-start">
+                            <span className="text-sm font-medium">{s.total}</span>
+                            {levels.slice(0, 3).map(([lvl, cnt]) => (
+                              <span key={lvl} className="text-xs px-1.5 py-0.5 bg-muted rounded">
+                                {lvl}: {cnt}
+                              </span>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
+                    <TableCell>
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {(currentUserRole === 'admin' || currentUserRole === 'teacher') && (user.role === 'student' || !user.role) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAssignLessons(user)}
+                            disabled={isLoading}
+                            title="Asignar lecciones a este estudiante"
+                          >
+                            <BookOpen className="w-4 h-4 mr-1" />
+                            Asignar
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
@@ -514,6 +631,55 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
           </Table>
         )}
       </CardContent>
+
+      {/* Assign Lessons Dialog */}
+      <Dialog open={assignDialogOpen} onOpenChange={(open) => {
+        setAssignDialogOpen(open);
+        if (!open) setAssigningUser(null);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Asignar Lecciones a {assigningUser?.full_name || "Estudiante"}</DialogTitle>
+            <DialogDescription>
+              Selecciona las lecciones que el estudiante debe completar. Solo podrá descargar certificados al completar todas las lecciones asignadas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {availableLessons.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No hay lecciones disponibles en esta organización.</p>
+            ) : (
+              <div className="border rounded-lg max-h-80 overflow-y-auto p-2 space-y-2">
+                {availableLessons.map((lesson) => (
+                  <div key={lesson.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded">
+                    <Checkbox
+                      id={`assign-${lesson.id}`}
+                      checked={assignedLessonIds.includes(lesson.id)}
+                      onCheckedChange={(checked) => {
+                        setAssignedLessonIds(prev =>
+                          checked ? [...prev, lesson.id] : prev.filter(id => id !== lesson.id)
+                        );
+                      }}
+                    />
+                    <label htmlFor={`assign-${lesson.id}`} className="flex-1 cursor-pointer">
+                      <span className="font-medium">{lesson.title}</span>
+                      <span className="text-xs text-muted-foreground ml-2">({lesson.level})</span>
+                    </label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveAssignments} disabled={isAssigning}>
+              {isAssigning && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Guardar asignaciones
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

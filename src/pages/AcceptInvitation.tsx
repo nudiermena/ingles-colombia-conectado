@@ -79,7 +79,7 @@ const AcceptInvitation = () => {
         });
         
         // Redirect based on role
-        if (invitation.role === 'admin') {
+        if (invitation.role === 'admin' || invitation.role === 'teacher') {
           navigate('/admin');
         } else {
           navigate('/student');

@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 
 interface CertificateData {
-  id: number;
+  id: number | string;
   level: string;
   title: string;
   description: string;
@@ -53,93 +53,80 @@ export const generateCertificatePDF = (
   doc.setFont('helvetica', 'bold');
   doc.text('CERTIFICADO DE COMPLETACIÓN', 148.5, 35, { align: 'center' });
 
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Certificate of Completion', 148.5, 50, { align: 'center' });
-
-  // Award icon (represented as text)
-  doc.setTextColor(...successColor);
-  doc.setFontSize(48);
-  doc.text('✓', 148.5, 75, { align: 'center' });
-
-  // Student name
-  doc.setTextColor(...darkColor);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  const studentName = userData.fullName || userData.email || 'Estudiante';
-  doc.text(studentName, 148.5, 95, { align: 'center', maxWidth: 250 });
-
-  // Description
   doc.setFontSize(14);
   doc.setFont('helvetica', 'normal');
-  doc.setTextColor(100, 100, 100);
-  const description = certificate.description;
-  const descriptionLines = doc.splitTextToSize(description, 250);
-  doc.text(descriptionLines, 148.5, 110, { align: 'center', maxWidth: 250 });
+  doc.text('Certificate of Completion', 148.5, 48, { align: 'center' });
 
-  // Certificate details
-  doc.setFontSize(16);
+  // Student name - no symbol/icon to avoid encoding issues
+  doc.setTextColor(...darkColor);
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  const studentName = (userData.fullName || userData.email || 'Estudiante').toString();
+  const nameLines = doc.splitTextToSize(studentName, 240);
+  doc.text(nameLines, 148.5, 78, { align: 'center', maxWidth: 240 });
+
+  // Description
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(80, 80, 80);
+  const description = certificate.description;
+  const descriptionLines = doc.splitTextToSize(description, 240);
+  doc.text(descriptionLines, 148.5, 95, { align: 'center', maxWidth: 240 });
+
+  // Certificate title
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(...darkColor);
-  doc.text(certificate.title, 148.5, 130, { align: 'center', maxWidth: 250 });
+  doc.text(certificate.title, 148.5, 118, { align: 'center', maxWidth: 240 });
 
   // Level badge
   doc.setFillColor(...successColor);
-  doc.circle(148.5, 150, 15, 'F');
+  doc.circle(148.5, 138, 14, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text(certificate.level, 148.5, 154, { align: 'center' });
+  doc.text(certificate.level, 148.5, 142, { align: 'center' });
 
   // Skills section
+  let yPos = 165;
   if (certificate.skills && certificate.skills.length > 0) {
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...darkColor);
-    doc.text('Habilidades Adquiridas:', 148.5, 175, { align: 'center' });
+    doc.text('Habilidades Adquiridas:', 148.5, yPos, { align: 'center' });
+    yPos += 8;
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(100, 100, 100);
-    
-    const skillsText = certificate.skills.join(' • ');
-    const skillsLines = doc.splitTextToSize(skillsText, 250);
-    doc.text(skillsLines, 148.5, 183, { align: 'center', maxWidth: 250 });
+    doc.setTextColor(80, 80, 80);
+    const skillsText = certificate.skills.join(' - ');
+    const skillsLines = doc.splitTextToSize(skillsText, 240);
+    doc.text(skillsLines, 148.5, yPos, { align: 'center', maxWidth: 240 });
+    yPos += 15;
   }
 
   // Date
-  if (certificate.dateEarned) {
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Fecha de emisión: ${certificate.dateEarned}`, 148.5, 185, { align: 'center' });
-  } else {
-    const today = new Date();
-    const dateStr = today.toLocaleDateString('es-CO', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Fecha de emisión: ${dateStr}`, 148.5, 185, { align: 'center' });
-  }
+  const dateStr = certificate.dateEarned || new Date().toLocaleDateString('es-CO', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 120, 120);
+  doc.text(`Fecha de emisión: ${dateStr}`, 148.5, yPos, { align: 'center' });
+  yPos += 12;
 
   // Footer
   doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
+  doc.setTextColor(130, 130, 130);
   doc.text(
     'Este certificado está alineado con el Marco Común Europeo de Referencia (MCER)',
-    148.5,
-    195,
-    { align: 'center' }
+    148.5, yPos, { align: 'center' }
   );
 
   // Certificate ID
-  doc.setFontSize(8);
-  doc.setTextColor(200, 200, 200);
-  doc.text(`ID: CERT-${certificate.level}-${certificate.id}-${Date.now()}`, 148.5, 200, { align: 'center' });
+  doc.setFontSize(7);
+  doc.setTextColor(180, 180, 180);
+  doc.text(`ID: CERT-${certificate.level}-${String(certificate.id)}-${Date.now()}`, 148.5, yPos + 6, { align: 'center' });
 
   // Generate filename
   const filename = `Certificado_${certificate.level}_${studentName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;

@@ -190,7 +190,10 @@ const LevelA1 = () => {
                         {lesson.locked ? (
                           "Bloqueado"
                         ) : (
-                          <Link to={`/leccion/${lesson.id}`}>
+                          <Link 
+                            to={`/leccion/${lesson.id}`} 
+                            state={{ restart: lesson.completed }}
+                          >
                             {lesson.completed ? (
                               "Repasar"
                             ) : (

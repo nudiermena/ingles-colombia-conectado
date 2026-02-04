@@ -249,7 +249,10 @@ const Lessons = () => {
                     className="w-full group"
                     asChild
                   >
-                    <Link to={`/leccion/${lesson.id}`}>
+                    <Link 
+                      to={`/leccion/${lesson.id}`} 
+                      state={{ selectedTenant: activeTenant, restart: completed }}
+                    >
                       <Play className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
                       {completed ? "Repasar" : "Comenzar"}
                       <ChevronRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />

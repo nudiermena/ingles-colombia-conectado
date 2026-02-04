@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BookOpen, Mail, Phone, MapPin } from "lucide-react";
 
 const Footer = () => {
@@ -23,18 +24,18 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Plataforma</h3>
             <div className="space-y-2">
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/lecciones" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Lecciones
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/lecciones" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Ejercicios
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/certificados" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Certificados
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/placement-test" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Test de Nivel
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -42,18 +43,18 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="font-semibold text-foreground">Soporte</h3>
             <div className="space-y-2">
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/ayuda" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Centro de Ayuda
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/guias-docentes" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Guías para Docentes
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/privacy" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Política de Privacidad
-              </a>
-              <a href="#" className="block text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/terms" className="block text-muted-foreground hover:text-foreground transition-colors">
                 Términos de Uso
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -63,11 +64,11 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Mail className="w-4 h-4" />
-                <span className="text-sm">hola@englishco.edu.co</span>
+                <span className="text-sm">hola@englishco.com</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">+57 (1) 234 5678</span>
+                <span className="text-sm">+57(313)7076032</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />
@@ -83,15 +84,15 @@ const Footer = () => {
               © 2024 EnglishCo. Todos los derechos reservados.
             </p>
             <div className="flex items-center gap-6 text-sm">
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              <Link to="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                 Privacidad
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
                 Términos
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+              </Link>
+              <Link to="/cookies" className="text-muted-foreground hover:text-foreground transition-colors">
                 Cookies
-              </a>
+              </Link>
             </div>
           </div>
         </div>

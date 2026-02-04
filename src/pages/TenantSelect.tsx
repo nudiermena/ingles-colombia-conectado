@@ -37,12 +37,12 @@ const TenantSelect = () => {
         switchTenant(singleTenant);
         
         // Redirect based on role
-        if (role === 'admin') {
+        if (role === 'admin' || role === 'teacher') {
           navigate('/admin', { 
             replace: true,
             state: { selectedTenant: singleTenant }
           });
-        } else if (role === 'student' || role === 'teacher') {
+        } else if (role === 'student') {
           navigate('/student', { 
             replace: true,
             state: { selectedTenant: singleTenant }
@@ -108,12 +108,12 @@ const TenantSelect = () => {
     });
     
     // Navigate with tenant in state so it's available immediately
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'teacher') {
       navigate('/admin', { 
         replace: true,
         state: { selectedTenant: tenant }
       });
-    } else if (role === 'student' || role === 'teacher') {
+    } else if (role === 'student') {
       navigate('/student', { 
         replace: true,
         state: { selectedTenant: tenant }
@@ -209,6 +209,7 @@ const TenantSelect = () => {
               )}
             </div>
 
+            {tenants.some(t => getRoleInTenant(t.id) === 'admin') && (
             <Button
               variant="outline"
               className="w-full"
@@ -218,6 +219,7 @@ const TenantSelect = () => {
               <Plus className="w-5 h-5 mr-2" />
               Crear Nueva Organización
             </Button>
+            )}
           </>
         ) : (
           <Card>
