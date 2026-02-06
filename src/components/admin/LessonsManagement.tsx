@@ -34,7 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLessons, type Lesson } from "@/hooks/useLessons";
 import { seedLessonsForTenant } from "@/scripts/seedLessons";
 import { seedCursoInglesLessonsForTenant } from "@/scripts/seedCursoInglesLessons";
-import { BookOpen, Plus, Edit, Trash2, Loader2, Search, CheckCircle, Code2, CheckCircle2, AlertCircle } from "lucide-react";
+import { BookOpen, Plus, Edit, Trash2, Loader2, Search, CheckCircle, Code2, CheckCircle2, AlertCircle, GripVertical } from "lucide-react";
 import type { Tenant } from "@/hooks/useTenant";
 
 interface LessonsManagementProps {
@@ -57,6 +57,8 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
   const [importProgress, setImportProgress] = useState(0);
   const [importResult, setImportResult] = useState<{ success: number; errors: number; skipped: number; updated?: number; inserted?: number } | null>(null);
   const [jsonValidationError, setJsonValidationError] = useState<string | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     level: "A1",
@@ -310,6 +312,53 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
         ? prev.filter(l => l !== level)
         : [...prev, level]
     );
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex == null || draggedIndex === dropIndex) {
+      setDraggedIndex(null);
+      return;
+    }
+    const draggedId = filteredLessons[draggedIndex].id;
+    const dropId = filteredLessons[dropIndex].id;
+    const fromIdx = lessons.findIndex((l) => l.id === draggedId);
+    const toIdx = lessons.findIndex((l) => l.id === dropId);
+    if (fromIdx === -1 || toIdx === -1) {
+      setDraggedIndex(null);
+      return;
+    }
+    const newOrder = [...lessons];
+    const [item] = newOrder.splice(fromIdx, 1);
+    newOrder.splice(toIdx, 0, item);
+    setIsReordering(true);
+    try {
+      for (let i = 0; i < newOrder.length; i++) {
+        await updateLesson(newOrder[i].id, { order_index: i });
+      }
+      await fetchLessons();
+      toast({ title: "Orden actualizado", description: "La prioridad de las lecciones se ha guardado." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err?.message || "No se pudo actualizar el orden", variant: "destructive" });
+    } finally {
+      setIsReordering(false);
+      setDraggedIndex(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const handleImport = async () => {
@@ -817,6 +866,7 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10"></TableHead>
               <TableHead>ID</TableHead>
               <TableHead>Título</TableHead>
               <TableHead>Nivel</TableHead>
@@ -828,7 +878,7 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
           <TableBody>
                 {filteredLessons.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8">
+                    <TableCell colSpan={7} className="text-center py-8">
                       <div className="space-y-2">
                         <p className="text-muted-foreground">
                           {lessons.length === 0 
@@ -857,8 +907,19 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
                     </TableCell>
                   </TableRow>
                 ) : (
-              filteredLessons.map((lesson) => (
-                <TableRow key={lesson.id}>
+              filteredLessons.map((lesson, index) => (
+                <TableRow
+                  key={lesson.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`cursor-grab active:cursor-grabbing ${draggedIndex === index ? 'opacity-50' : ''}`}
+                >
+                  <TableCell className="w-10 p-1" onDragStart={(e) => e.stopPropagation()}>
+                    <GripVertical className="w-4 h-4 text-muted-foreground" />
+                  </TableCell>
                   <TableCell className="font-medium">{lesson.id}</TableCell>
                   <TableCell>{lesson.title}</TableCell>
                   <TableCell>
@@ -874,6 +935,7 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEdit(lesson)}
+                        disabled={isReordering}
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -881,7 +943,7 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(lesson.id)}
-                        disabled={isLoading}
+                        disabled={isLoading || isReordering}
                       >
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>

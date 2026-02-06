@@ -29,6 +29,8 @@ import StudentDashboard from "./pages/StudentDashboard";
 import SeedLessons from "./pages/SeedLessons";
 import PlacementTest from "./pages/PlacementTest";
 import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
+import UnitDetail from "./pages/UnitDetail";
 
 const queryClient = new QueryClient();
 
@@ -70,7 +72,8 @@ const App = () => (
             <Route path="/seed-lessons" element={<SeedLessons />} />
             <Route path="/placement-test" element={<PlacementTest />} />
             <Route path="/cursos" element={<Courses />} />
-            <Route path="/course/:id" element={<Courses />} />
+            <Route path="/course/:id" element={<CourseDetail />} />
+            <Route path="/course/:courseId/unit/:unitId" element={<UnitDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

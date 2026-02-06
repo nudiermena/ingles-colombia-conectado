@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, Loader2, Trash2, Pencil, Plus, BookOpen } from "lucide-react";
+import { Users, Search, Loader2, Trash2, Pencil, Plus, BookOpen, Upload, FileText, ClipboardCheck } from "lucide-react";
 import type { Tenant } from "@/hooks/useTenant";
 
 interface UsersManagementProps {
@@ -70,6 +70,17 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
   const [availableLessons, setAvailableLessons] = useState<{ id: string; title: string; level: string }[]>([]);
   const [assignedLessonIds, setAssignedLessonIds] = useState<string[]>([]);
   const [isAssigning, setIsAssigning] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<{ email: string; full_name: string; role: "admin" | "teacher" | "student" }[]>([]);
+  const [importDefaultPassword, setImportDefaultPassword] = useState("Cambiar123!");
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [placementTestDialogOpen, setPlacementTestDialogOpen] = useState(false);
+  const [placementTestSelectedIds, setPlacementTestSelectedIds] = useState<Set<string>>(new Set());
+  const [placementTestAssignedIds, setPlacementTestAssignedIds] = useState<Set<string>>(new Set());
+  const [isAssigningPlacementTest, setIsAssigningPlacementTest] = useState(false);
 
   useEffect(() => {
     if (currentTenant) {
@@ -82,15 +93,15 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
 
     setIsLoading(true);
     try {
-      // Fetch all user roles in this tenant
+      // Fetch all user roles in this tenant (same as Rol tab: everyone in the org)
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('*')
-        .eq('tenant_id', currentTenant.id);
+        .eq('tenant_id', currentTenant.id)
+        .order('created_at', { ascending: false });
 
       if (rolesError) throw rolesError;
 
-      // Fetch user profiles
       const userIds = rolesData?.map(r => r.user_id) || [];
       if (userIds.length === 0) {
         setUsers([]);
@@ -106,7 +117,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       if (profilesError) throw profilesError;
 
       // Fetch assigned lessons summary for users in this tenant
-      const { data: assignmentsData, error: assignmentsError } = await supabase
+      const { data: assignmentsData, error: assignmentsError } = await (supabase as any)
         .from('user_lesson_assignments')
         .select('user_id, lesson_id, lessons(level)')
         .eq('tenant_id', currentTenant.id)
@@ -129,9 +140,10 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       // Build list from user_roles (source of truth) so new users show up even if profile is delayed
       const usersWithRoles: UserWithRole[] = (rolesData || []).map((roleRow) => {
         const profile = (profilesData || []).find((p) => p.user_id === roleRow.user_id);
+        const profileEmail = (profile as any)?.email as string | undefined;
         return {
           id: roleRow.user_id,
-          email: profile?.email ?? roleRow.user_id.substring(0, 8) + '...',
+          email: profileEmail ?? roleRow.user_id.substring(0, 8) + '...',
           full_name: profile?.full_name ?? 'Sin nombre',
           role: roleRow.role ?? null,
           role_id: roleRow.id ?? null,
@@ -235,45 +247,45 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     e.preventDefault();
     if (!currentTenant) return;
 
+    const role = formData.role && ['admin', 'teacher', 'student'].includes(formData.role)
+      ? formData.role
+      : 'student';
+
     setIsSubmitting(true);
     try {
       if (isEditing && editingUser) {
-        // Update: profile full_name and user_roles role
-        const updates: Promise<any>[] = [];
-        updates.push(
-          supabase
-            .from("profiles")
-            .update({ full_name: formData.full_name })
-            .eq("user_id", editingUser.id)
-        );
+        await supabase
+          .from("profiles")
+          .update({ full_name: formData.full_name })
+          .eq("user_id", editingUser.id)
+          .select();
+
         if (editingUser.role_id) {
-          updates.push(
-            supabase
-              .from("user_roles")
-              .update({ role: formData.role })
-              .eq("id", editingUser.role_id)
-          );
+          await supabase
+            .from("user_roles")
+            .update({ role })
+            .eq("tenant_id", currentTenant.id)
+            .eq("user_id", editingUser.id);
         } else {
-          updates.push(
-            supabase.from("user_roles").insert({
+          await supabase
+            .from("user_roles")
+            .insert({
               user_id: editingUser.id,
               tenant_id: currentTenant.id,
-              role: formData.role,
+              role,
             })
-          );
+            .select();
         }
-        await Promise.all(updates);
         toast({
           title: "Usuario actualizado",
           description: "El usuario ha sido actualizado exitosamente",
         });
       } else {
-        // Create: signUp then add to tenant
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: formData.email.trim(),
           password: formData.password,
           options: {
-            data: { full_name: formData.full_name },
+            data: { full_name: formData.full_name || formData.email.trim() },
           },
         });
 
@@ -282,13 +294,49 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
           throw new Error("No se pudo crear el usuario. ¿El correo ya está registrado?");
         }
 
-        const { error: roleError } = await supabase.rpc("add_user_role_to_tenant", {
-          _user_id: data.user.id,
-          _tenant_id: currentTenant.id,
-          _role: formData.role,
-        });
+        const userId = data.user.id;
 
-        if (roleError) throw roleError;
+        // Ensure profile exists (trigger may run async). Upsert so we have a row for this user.
+        await supabase.from("profiles").upsert(
+          {
+            user_id: userId,
+            full_name: formData.full_name?.trim() || data.user.email || "Usuario",
+            email: data.user.email,
+          },
+          { onConflict: "user_id" }
+        );
+
+        const addRoleWithRetry = async (attempt = 0): Promise<void> => {
+          const maxAttempts = 3;
+          const { error: roleError } = await (supabase as any).rpc("add_user_role_to_tenant", {
+            _user_id: userId,
+            _tenant_id: currentTenant.id,
+            _role: role,
+          });
+          if (roleError) {
+            const isFkViolation = roleError.message?.includes("user_roles_user_id_fkey") || roleError.code === "23503";
+            const isConflict =
+              roleError.code === "409" ||
+              roleError.status === 409 ||
+              String(roleError.message || "").includes("409");
+            if (isConflict) {
+              const { data: existing } = await supabase
+                .from("user_roles")
+                .select("id")
+                .eq("user_id", userId)
+                .eq("tenant_id", currentTenant.id)
+                .maybeSingle();
+              if (existing) return;
+            }
+            if (isFkViolation && attempt < maxAttempts - 1) {
+              await new Promise((r) => setTimeout(r, 600 * (attempt + 1)));
+              return addRoleWithRetry(attempt + 1);
+            }
+            throw roleError;
+          }
+        };
+
+        await addRoleWithRetry();
 
         toast({
           title: "Usuario creado",
@@ -301,9 +349,17 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       setEditingUser(null);
       await fetchUsers();
     } catch (error: any) {
+      const isFkOrConflict =
+        error?.message?.includes("user_roles_user_id_fkey") ||
+        error?.code === "23503" ||
+        error?.code === "409" ||
+        error?.status === 409;
+      const message = isFkOrConflict
+        ? "El usuario se creó pero no se pudo asignar a la organización. Asigna el rol manualmente desde la lista de usuarios o intenta de nuevo en unos segundos."
+        : error?.message || "No se pudo guardar";
       toast({
         title: "Error",
-        description: error.message || "No se pudo guardar",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -316,7 +372,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     setAssigningUser(user);
     setAssignDialogOpen(true);
     try {
-      const { data: lessonsData } = await supabase
+      const { data: lessonsData } = await (supabase as any)
         .from('lessons')
         .select('id, title, level')
         .eq('tenant_id', currentTenant.id)
@@ -325,7 +381,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
         .order('order_index');
       setAvailableLessons(lessonsData || []);
 
-      const { data: assignments } = await supabase
+      const { data: assignments } = await (supabase as any)
         .from('user_lesson_assignments')
         .select('lesson_id')
         .eq('user_id', user.id)
@@ -336,11 +392,175 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     }
   };
 
+  const parseImportFile = (file: File): Promise<{ email: string; full_name: string; role: "admin" | "teacher" | "student" }[]> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = (reader.result as string) || "";
+        const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+        const isCsv = file.name.toLowerCase().endsWith(".csv");
+        const rows: { email: string; full_name: string; role: "admin" | "teacher" | "student" }[] = [];
+        const validRoles = ["admin", "teacher", "student"] as const;
+
+        let start = 0;
+        if (isCsv && lines.length > 0) {
+          const first = lines[0].toLowerCase();
+          if (first.includes("email") && (first.includes("name") || first.includes("nombre") || first.includes("role") || first.includes("rol"))) start = 1;
+        }
+        for (let i = start; i < lines.length; i++) {
+          const line = lines[i];
+          const parts = isCsv ? line.split(/[,;]/).map((p) => p.trim()) : line.split(/[\t,]/).map((p) => p.trim());
+          if (parts.length === 0) continue;
+          const email = parts[0];
+          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) continue;
+          const full_name = parts[1] || email.split("@")[0] || "Usuario";
+          const roleRaw = (parts[2] || "student").toLowerCase();
+          const role = validRoles.includes(roleRaw as any) ? (roleRaw as "admin" | "teacher" | "student") : "student";
+          rows.push({ email, full_name, role });
+        }
+        resolve(rows);
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsText(file, "UTF-8");
+    });
+  };
+
+  const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ext = file.name.toLowerCase();
+    if (!ext.endsWith(".txt") && !ext.endsWith(".csv")) {
+      toast({ title: "Formato no válido", description: "Usa un archivo .txt o .csv", variant: "destructive" });
+      return;
+    }
+    setImportFile(file);
+    setImportResult(null);
+    try {
+      const rows = await parseImportFile(file);
+      setImportPreview(rows);
+      if (rows.length === 0) {
+        toast({ title: "Sin datos", description: "No se encontraron filas válidas (correo obligatorio).", variant: "destructive" });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err?.message || "No se pudo leer el archivo", variant: "destructive" });
+    }
+  };
+
+  const handleImportUsers = async () => {
+    if (!currentTenant || importPreview.length === 0) return;
+    setIsImporting(true);
+    setImportResult(null);
+    const errors: string[] = [];
+    let success = 0;
+
+    for (const row of importPreview) {
+      try {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: row.email.trim(),
+          password: importDefaultPassword,
+          options: { data: { full_name: row.full_name || row.email.trim() } },
+        });
+        if (signUpError) {
+          if (signUpError.message?.includes("already registered")) {
+            errors.push(`${row.email}: ya está registrado`);
+          } else {
+            errors.push(`${row.email}: ${signUpError.message}`);
+          }
+          continue;
+        }
+        if (!data.user) continue;
+        const userId = data.user.id;
+        await supabase.from("profiles").upsert(
+          { user_id: userId, full_name: row.full_name || data.user.email || "Usuario", email: data.user.email },
+          { onConflict: "user_id" }
+        );
+        const addRoleWithRetry = async (attempt = 0): Promise<void> => {
+          const { error: roleError } = await (supabase as any).rpc("add_user_role_to_tenant", {
+            _user_id: userId,
+            _tenant_id: currentTenant.id,
+            _role: row.role,
+          });
+          if (roleError) {
+            const isConflict = roleError.code === "409" || roleError.status === 409;
+            if (isConflict) {
+              const { data: existing } = await supabase.from("user_roles").select("id").eq("user_id", userId).eq("tenant_id", currentTenant.id).maybeSingle();
+              if (existing) return;
+            }
+            if (attempt < 2) {
+              await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+              return addRoleWithRetry(attempt + 1);
+            }
+            errors.push(`${row.email}: no se pudo asignar rol`);
+            return;
+          }
+        };
+        await addRoleWithRetry();
+        success++;
+      } catch (err: any) {
+        errors.push(`${row.email}: ${err?.message || "Error"}`);
+      }
+    }
+
+    setImportResult({ success, errors });
+    await fetchUsers();
+    setIsImporting(false);
+    if (success > 0) {
+      toast({ title: "Importación completada", description: `Se crearon ${success} usuario(s). Contraseña por defecto: ${importDefaultPassword}` });
+    }
+    if (errors.length > 0 && success === 0) {
+      toast({ title: "Error", description: errors.slice(0, 3).join("; "), variant: "destructive" });
+    }
+  };
+
+  const handleOpenPlacementTestDialog = async () => {
+    if (!currentTenant) return;
+    setPlacementTestDialogOpen(true);
+    try {
+      const { data } = await (supabase as any)
+        .from('placement_test_assignments')
+        .select('user_id')
+        .eq('tenant_id', currentTenant.id);
+      const ids = new Set<string>((data || []).map((r: { user_id: string }) => r.user_id));
+      setPlacementTestAssignedIds(ids);
+      setPlacementTestSelectedIds(ids);
+    } catch {
+      setPlacementTestAssignedIds(new Set());
+      setPlacementTestSelectedIds(new Set());
+    }
+  };
+
+  const handleSavePlacementTestAssignments = async () => {
+    if (!currentTenant || !currentUser) return;
+    setIsAssigningPlacementTest(true);
+    try {
+      const toAdd = [...placementTestSelectedIds].filter(id => !placementTestAssignedIds.has(id));
+      const toRemove = [...placementTestAssignedIds].filter(id => !placementTestSelectedIds.has(id));
+      for (const userId of toRemove) {
+        await (supabase as any)
+          .from('placement_test_assignments')
+          .delete()
+          .eq('user_id', userId)
+          .eq('tenant_id', currentTenant.id);
+      }
+      for (const userId of toAdd) {
+        await (supabase as any)
+          .from('placement_test_assignments')
+          .insert({ user_id: userId, tenant_id: currentTenant.id, assigned_by: currentUser.id });
+      }
+      setPlacementTestAssignedIds(placementTestSelectedIds);
+      toast({ title: "Test de nivelación", description: "Asignaciones actualizadas correctamente." });
+    } catch (err: any) {
+      toast({ title: "Error", description: err?.message || "No se pudieron guardar", variant: "destructive" });
+    } finally {
+      setIsAssigningPlacementTest(false);
+    }
+  };
+
   const handleSaveAssignments = async () => {
     if (!currentTenant || !assigningUser) return;
     setIsAssigning(true);
     try {
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase as any)
         .from('user_lesson_assignments')
         .select('id, lesson_id')
         .eq('user_id', assigningUser.id)
@@ -350,15 +570,15 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       const toRemove = (existing || []).filter(e => !assignedLessonIds.includes(e.lesson_id));
 
       for (const a of toRemove) {
-        await supabase.from('user_lesson_assignments').delete().eq('id', a.id);
+        await (supabase as any).from('user_lesson_assignments').delete().eq('id', a.id);
       }
       for (const lessonId of toAdd) {
-        await supabase.from('user_lesson_assignments').insert({
+        await (supabase as any).from('user_lesson_assignments').insert({
           user_id: assigningUser.id,
           tenant_id: currentTenant.id,
           lesson_id: lessonId,
           assigned_by: currentUser?.id,
-        });
+        }).select();
       }
       toast({ title: "Lecciones asignadas", description: "Las lecciones han sido actualizadas correctamente" });
       setAssignDialogOpen(false);
@@ -395,6 +615,14 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                 Nueva Invitación
               </Button>
             )}
+            <Button type="button" variant="outline" onClick={handleOpenPlacementTestDialog}>
+              <ClipboardCheck className="w-4 h-4 mr-2" />
+              Test de nivelación
+            </Button>
+            <Button type="button" variant="outline" onClick={() => { setImportDialogOpen(true); setImportPreview([]); setImportFile(null); setImportResult(null); }}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar
+            </Button>
             <Button type="button" onClick={handleCreate}>
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Usuario
@@ -477,11 +705,14 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {currentUserRole === "admin" && (
+                          {(currentUserRole === "admin" || currentUserRole === "teacher") && (
+                            <>
                             <SelectItem value="admin">Administrador</SelectItem>
+                            <SelectItem value="teacher">Profesor</SelectItem>
+                            <SelectItem value="student">Estudiante</SelectItem>
+                            </>
                           )}
-                          <SelectItem value="teacher">Profesor</SelectItem>
-                          <SelectItem value="student">Estudiante</SelectItem>
+                        
                         </SelectContent>
                       </Select>
                     </div>
@@ -632,6 +863,134 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
         )}
       </CardContent>
 
+      {/* Import Users Dialog */}
+      <Dialog open={importDialogOpen} onOpenChange={(open) => {
+        setImportDialogOpen(open);
+        if (!open) { setImportFile(null); setImportPreview([]); setImportResult(null); }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Importar usuarios
+            </DialogTitle>
+            <DialogDescription>
+              Sube un archivo .txt o .csv. Formato: una línea por usuario. CSV: email, nombre, rol. TXT: email por línea o email,nombre,rol. Rol por defecto: student.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-center gap-2">
+              <Input
+                ref={fileInputRef as any}
+                type="file"
+                accept=".txt,.csv"
+                className="hidden"
+                onChange={handleImportFileChange}
+              />
+              <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+                Elegir archivo .txt o .csv
+              </Button>
+              {importFile && <span className="text-sm text-muted-foreground">{importFile.name}</span>}
+            </div>
+            <div className="space-y-2">
+              <Label>Contraseña por defecto para nuevos usuarios</Label>
+              <Input
+                type="password"
+                value={importDefaultPassword}
+                onChange={(e) => setImportDefaultPassword(e.target.value)}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </div>
+            {importPreview.length > 0 && (
+              <div className="border rounded-lg max-h-48 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Rol</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {importPreview.slice(0, 20).map((row, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{row.email}</TableCell>
+                        <TableCell>{row.full_name}</TableCell>
+                        <TableCell>{row.role}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {importPreview.length > 20 && <p className="text-xs text-muted-foreground p-2">y {importPreview.length - 20} más</p>}
+              </div>
+            )}
+            {importResult && (
+              <div className="p-3 rounded-lg bg-muted text-sm">
+                <p className="font-medium">Creados: {importResult.success}</p>
+                {importResult.errors.length > 0 && (
+                  <ul className="mt-2 text-destructive text-xs list-disc list-inside">
+                    {importResult.errors.slice(0, 5).map((e, i) => <li key={i}>{e}</li>)}
+                    {importResult.errors.length > 5 && <li>… y {importResult.errors.length - 5} más</li>}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setImportDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleImportUsers} disabled={isImporting || importPreview.length === 0}>
+              {isImporting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Importar {importPreview.length > 0 ? `(${importPreview.length})` : ""}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Placement Test Assignment Dialog */}
+      <Dialog open={placementTestDialogOpen} onOpenChange={(open) => { setPlacementTestDialogOpen(open); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Asignar Test de Nivelación</DialogTitle>
+            <DialogDescription>
+              Selecciona los estudiantes a quienes asignar el test de nivelación. Podrán realizarlo antes de asignarles lecciones para ver su desempeño.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-64 overflow-y-auto space-y-2 py-4">
+            {users.filter(u => u.role === 'student' || !u.role).map((u) => (
+              <div key={u.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded">
+                <Checkbox
+                  id={`pt-${u.id}`}
+                  checked={placementTestSelectedIds.has(u.id)}
+                  onCheckedChange={(checked) => {
+                    setPlacementTestSelectedIds(prev => {
+                      const next = new Set(prev);
+                      if (checked) next.add(u.id); else next.delete(u.id);
+                      return next;
+                    });
+                  }}
+                />
+                <label htmlFor={`pt-${u.id}`} className="flex-1 cursor-pointer text-sm">
+                  {u.full_name || u.email}
+                </label>
+                {placementTestAssignedIds.has(u.id) && (
+                  <span className="text-xs text-muted-foreground">asignado</span>
+                )}
+              </div>
+            ))}
+            {users.filter(u => u.role === 'student' || !u.role).length === 0 && (
+              <p className="text-sm text-muted-foreground">No hay estudiantes en esta organización.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPlacementTestDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSavePlacementTestAssignments} disabled={isAssigningPlacementTest}>
+              {isAssigningPlacementTest && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Guardar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Assign Lessons Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={(open) => {
         setAssignDialogOpen(open);
@@ -648,24 +1007,37 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
             {availableLessons.length === 0 ? (
               <p className="text-muted-foreground text-sm">No hay lecciones disponibles en esta organización.</p>
             ) : (
-              <div className="border rounded-lg max-h-80 overflow-y-auto p-2 space-y-2">
-                {availableLessons.map((lesson) => (
-                  <div key={lesson.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded">
-                    <Checkbox
-                      id={`assign-${lesson.id}`}
-                      checked={assignedLessonIds.includes(lesson.id)}
-                      onCheckedChange={(checked) => {
-                        setAssignedLessonIds(prev =>
-                          checked ? [...prev, lesson.id] : prev.filter(id => id !== lesson.id)
-                        );
-                      }}
-                    />
-                    <label htmlFor={`assign-${lesson.id}`} className="flex-1 cursor-pointer">
-                      <span className="font-medium">{lesson.title}</span>
-                      <span className="text-xs text-muted-foreground ml-2">({lesson.level})</span>
-                    </label>
-                  </div>
-                ))}
+              <div className="border rounded-lg max-h-80 overflow-y-auto p-2 space-y-4">
+                {(['A1', 'A2', 'B1', 'B2'] as const).map((level) => {
+                  const levelLessons = availableLessons.filter((l) => l.level === level);
+                  if (levelLessons.length === 0) return null;
+                  return (
+                    <div key={level}>
+                      <div className="sticky top-0 bg-muted/90 backdrop-blur px-2 py-1.5 rounded text-xs font-semibold text-muted-foreground uppercase tracking-wide border-b mb-2">
+                        Nivel {level}
+                      </div>
+                      <div className="space-y-1">
+                        {levelLessons.map((lesson) => (
+                          <div key={lesson.id} className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded">
+                            <Checkbox
+                              id={`assign-${lesson.id}`}
+                              checked={assignedLessonIds.includes(lesson.id)}
+                              onCheckedChange={(checked) => {
+                                setAssignedLessonIds(prev =>
+                                  checked ? [...prev, lesson.id] : prev.filter((id) => id !== lesson.id)
+                                );
+                              }}
+                            />
+                            <label htmlFor={`assign-${lesson.id}`} className="flex-1 cursor-pointer">
+                              <span className="font-medium">{lesson.title}</span>
+                              <span className="text-xs text-muted-foreground ml-2">({lesson.level})</span>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

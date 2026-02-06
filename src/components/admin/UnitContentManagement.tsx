@@ -380,10 +380,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
                 <SelectContent>
                   {units.map((unit) => (
                     <SelectItem key={unit.id} value={unit.id}>
-                      {unit.is_welcome_unit
-                        ? "Welcome Unit"
-                        : `Unit ${unit.unit_number}`}
-                      : {unit.title}
+                      {unit.is_welcome_unit ? "Welcome Unit" : `Unit ${unit.unit_number}`}: {unit.title}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -8,13 +8,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
-import { useLessons, useLessonProgress } from "@/hooks/useLessons";
-import { Search, Play, Clock, Star, ChevronRight, BookOpen, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { useLessons, useLessonProgress, useAssignedLessonIds } from "@/hooks/useLessons";
+import { supabase } from "@/integrations/supabase/client";
+import { Search, Play, Clock, Star, ChevronRight, BookOpen, Loader2, AlertCircle, RefreshCw, ClipboardList } from "lucide-react";
 
 const Lessons = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const { currentTenant, loading: tenantLoading, switchTenant } = useTenant(user?.id);
+  const { currentTenant, loading: tenantLoading, switchTenant, getRoleInTenant } = useTenant(user?.id);
   const navigate = useNavigate();
   
   // Get tenant from navigation state if available
@@ -28,8 +29,16 @@ const Lessons = () => {
   
   const { lessons, loading: lessonsLoading, fetchLessons } = useLessons(activeTenant?.id || null);
   const { progress, getProgressForLesson } = useLessonProgress(user?.id, activeTenant?.id || null);
+  const { assignedLessonIds, loading: assignedLoading } = useAssignedLessonIds(user?.id ?? undefined, activeTenant?.id ?? null);
+  const roleInTenant = getRoleInTenant(activeTenant?.id ?? '');
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("Todos");
+  const [hasPlacementTestAssigned, setHasPlacementTestAssigned] = useState(false);
+
+  const isStudent = roleInTenant === 'student';
+  const lessonsForUser = isStudent && assignedLessonIds.length > 0
+    ? lessons.filter((l) => assignedLessonIds.includes(l.id))
+    : lessons;
 
   // If we have initialTenant from navigation, set it in the hook
   useEffect(() => {
@@ -49,7 +58,20 @@ const Lessons = () => {
     }
   }, [user, activeTenant, tenantLoading, navigate]);
 
-  const filteredLessons = lessons.filter(lesson => {
+  useEffect(() => {
+    if (!user?.id || !activeTenant?.id) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from('placement_test_assignments')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('tenant_id', activeTenant.id)
+        .maybeSingle();
+      setHasPlacementTestAssigned(!!data);
+    })();
+  }, [user?.id, activeTenant?.id]);
+
+  const filteredLessons = lessonsForUser.filter(lesson => {
     const matchesSearch = lesson.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (lesson.objectives?.[0] || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === "Todos" || lesson.level === selectedLevel;
@@ -102,7 +124,7 @@ const Lessons = () => {
     );
   }
 
-  if (lessonsLoading) {
+  if (lessonsLoading || (isStudent && assignedLoading)) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -151,6 +173,18 @@ const Lessons = () => {
               )}
             </div>
 
+        {isStudent && hasPlacementTestAssigned && (
+          <div className="mb-6 p-4 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-primary" />
+              <span className="font-medium">Tienes un Test de Nivelación asignado. Realízalo para que tu profesor vea tu desempeño antes de asignarte lecciones.</span>
+            </div>
+            <Button asChild>
+              <Link to="/placement-test">Ir al Test de Nivelación</Link>
+            </Button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex flex-col md:flex-row gap-4 mb-8">
           <div className="relative flex-1">
@@ -163,8 +197,8 @@ const Lessons = () => {
             />
           </div>
           
-          <div className="flex gap-2">
-            {["Todos", "A1", "A2", "B1"].map((level) => (
+          <div className="flex gap-2 flex-wrap">
+            {["Todos", "A1", "A2", "B1", "B2"].map((level) => (
               <Button
                 key={level}
                 variant={selectedLevel === level ? "default" : "outline"}
@@ -174,7 +208,18 @@ const Lessons = () => {
                 {level}
               </Button>
             ))}
+            <Button variant="secondary" size="sm" asChild>
+              <Link to="/placement-test">
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Test de Nivelación
+              </Link>
+            </Button>
           </div>
+        </div>
+
+        {/* How it works: Lecciones → click a lesson → opens /leccion/:id with full content (vocabulary, exercises, reading, listening) */}
+        <div className="mb-6 p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+          <strong className="text-foreground">Cómo usar:</strong> Haz clic en <strong>Comenzar</strong> o <strong>Repasar</strong> en cualquier tarjeta para abrir la lección. Dentro verás vocabulario, ejercicios y, en lecciones mejoradas, comprensión de lectura y auditiva. ¿No sabes tu nivel? Prueba el <Link to="/placement-test" className="text-primary font-medium hover:underline">Test de Nivelación</Link>.
         </div>
 
         {/* Lessons Grid */}
@@ -270,12 +315,18 @@ const Lessons = () => {
               <Search className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-lg font-semibold mb-2">
-              {lessons.length === 0 ? "No hay lecciones disponibles" : "No se encontraron lecciones"}
+              {lessonsForUser.length === 0
+                ? isStudent && assignedLessonIds.length === 0
+                  ? "No tienes lecciones asignadas aún"
+                  : "No hay lecciones disponibles"
+                : "No se encontraron lecciones"}
             </h3>
             <p className="text-muted-foreground">
-              {lessons.length === 0 
-                ? "Contacta a tu administrador para agregar lecciones"
-                : "Intenta con otros términos de búsqueda"}
+              {isStudent && assignedLessonIds.length === 0
+                ? "Pide a tu profesor o administrador que te asigne lecciones."
+                : lessonsForUser.length === 0
+                  ? "Contacta a tu administrador para agregar lecciones"
+                  : "Intenta con otros términos de búsqueda"}
             </p>
           </div>
         )}

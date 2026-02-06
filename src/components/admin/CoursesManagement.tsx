@@ -97,8 +97,17 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
   const handleCreate = () => {
     setIsEditing(false);
     setEditingCourse(null);
+    const usedNumbers = new Set(courses.map((c) => c.course_number));
+    let nextNumber = 1;
+    for (let n = 1; n <= 4; n++) {
+      if (!usedNumbers.has(n)) {
+        nextNumber = n;
+        break;
+      }
+      nextNumber = n + 1;
+    }
     setFormData({
-      course_number: 1,
+      course_number: Math.min(nextNumber, 4),
       title: "Options",
       cefr_level: "A1+",
       cambridge_exam: "",
@@ -152,7 +161,27 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
       } else {
         const { error } = await supabase.from("courses").insert(courseData);
 
-        if (error) throw error;
+        if (error) {
+          const isDuplicate =
+            error.code === "23505" ||
+            error.message?.includes("unique constraint") ||
+            error.message?.includes("duplicate key");
+          if (isDuplicate) {
+            const used = new Set(courses.map((c) => c.course_number));
+            let suggestion = 1;
+            for (let n = 1; n <= 4; n++) {
+              if (!used.has(n)) {
+                suggestion = n;
+                break;
+              }
+              suggestion = n + 1;
+            }
+            throw new Error(
+              `Ya existe un curso con el número ${formData.course_number}. Usa otro número (1-4). Sugerencia: ${Math.min(suggestion, 4)}.`
+            );
+          }
+          throw error;
+        }
         toast({
           title: "Curso creado",
           description: "El curso ha sido creado exitosamente",
@@ -164,7 +193,7 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "No se pudo guardar el curso",
+        description: error?.message || "No se pudo guardar el curso",
         variant: "destructive",
       });
     } finally {

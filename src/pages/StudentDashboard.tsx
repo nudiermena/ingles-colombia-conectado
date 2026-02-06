@@ -19,7 +19,8 @@ import {
   Loader2,
   AlertCircle,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  GraduationCap
 } from "lucide-react";
 
 const StudentDashboard = () => {
@@ -319,6 +320,12 @@ const StudentDashboard = () => {
                   <Link to="/lecciones">
                     <BookOpen className="w-4 h-4 mr-2" />
                     Mis Lecciones
+                  </Link>
+                </Button>
+                <Button variant="outline" className="w-full justify-start" asChild>
+                  <Link to="/cursos">
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    Cursos Options
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>

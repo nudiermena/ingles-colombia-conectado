@@ -11,6 +11,9 @@ import { useTenant } from "@/hooks/useTenant";
 import { useLessons, useLessonProgress } from "@/hooks/useLessons";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { useToast } from "@/hooks/use-toast";
+import { AudioPlayer } from "@/components/lesson/AudioPlayer";
+import { ReadingComprehension } from "@/components/lesson/ReadingComprehension";
+import { PronunciationRecorder } from "@/components/lesson/PronunciationRecorder";
 import { 
   CheckCircle, 
   Clock, 
@@ -23,7 +26,9 @@ import {
   Award,
   Loader2,
   AlertCircle,
-  X
+  X,
+  Headphones,
+  FileText
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -404,38 +409,16 @@ const ExerciseComponent = ({
 
   if (exercise.type === 'pronunciation') {
     return (
-      <div className="text-center space-y-4">
-        <h3 className="text-lg font-semibold">
-          Practica la pronunciación de:
-        </h3>
-        <div className="bg-muted p-6 rounded-xl">
-          <h2 className="text-2xl font-bold mb-2">
-            {exercise.word}
-          </h2>
-          <p className="text-muted-foreground">
-            {exercise.pronunciation}
-          </p>
-        </div>
-        <Button 
-          variant="lesson" 
-          size="lg"
-          onClick={() => {
-            if (isSpeaking) {
-              stop();
-            } else {
-              speak(exercise.word, 'en-US');
-            }
-          }}
-        >
-          <Volume2 className="w-5 h-5 mr-2" />
-          {isSpeaking ? "Detener" : "Escuchar Pronunciación"}
-        </Button>
-        {isCompleted && (
-          <div className="p-3 rounded-lg bg-success/10 text-success">
-            <p className="font-medium">¡Ejercicio completado!</p>
-          </div>
-        )}
-      </div>
+      <PronunciationRecorder
+        word={exercise.word}
+        pronunciation={exercise.pronunciation}
+        lang="en-US"
+        isCompleted={isCompleted}
+        onComplete={onComplete}
+        onSpeakReference={speak}
+        onStopReference={stop}
+        isSpeakingReference={isSpeaking}
+      />
     );
   }
 
@@ -536,7 +519,11 @@ const LessonDetail = () => {
     // Load existing progress only once on initial mount
     // Don't reload if user has manually navigated
     if (existingProgress && lesson && !hasLoadedInitialProgress.current && !userHasNavigated.current) {
-      const totalSteps = (lesson.content?.vocabulary?.length || 0) + (lesson.content?.exercises?.length || 0);
+      const vocab = lesson.content?.vocabulary?.length || 0;
+      const exer = lesson.content?.exercises?.length || 0;
+      const reading = lesson.content?.reading?.length || 0;
+      const listening = lesson.content?.listening?.length || 0;
+      const totalSteps = vocab + exer + reading + listening;
       const savedStep = Math.floor((existingProgress.progress_percentage / 100) * totalSteps);
       setCurrentStep(savedStep);
       setCompletedExercises(existingProgress.exercise_results?.completed || []);
@@ -566,7 +553,11 @@ const LessonDetail = () => {
   useEffect(() => {
     // Auto-save progress
     if (lesson && currentStep > 0) {
-      const totalSteps = (lesson.content?.vocabulary?.length || 0) + (lesson.content?.exercises?.length || 0);
+      const vocab = lesson.content?.vocabulary?.length || 0;
+      const exer = lesson.content?.exercises?.length || 0;
+      const reading = lesson.content?.reading?.length || 0;
+      const listening = lesson.content?.listening?.length || 0;
+      const totalSteps = vocab + exer + reading + listening;
       const progressPercentage = Math.round((currentStep / totalSteps) * 100);
       
       const saveProgress = async () => {
@@ -656,7 +647,11 @@ const LessonDetail = () => {
 
   const vocabulary = lesson.content?.vocabulary || [];
   const exercises = lesson.content?.exercises || [];
-  const totalSteps = vocabulary.length + exercises.length;
+  const readingSections = lesson.content?.reading || [];
+  const listeningSections = lesson.content?.listening || [];
+  
+  // Calculate total steps: vocabulary + exercises + reading sections + listening sections
+  const totalSteps = vocabulary.length + exercises.length + readingSections.length + listeningSections.length;
   const progressPercentage = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0;
 
   const handleComplete = async () => {
@@ -697,9 +692,27 @@ const LessonDetail = () => {
     }
   };
 
-  const isVocabulary = currentStep < vocabulary.length;
+  // Determine current content type and data
+  const vocabEnd = vocabulary.length;
+  const exercisesEnd = vocabEnd + exercises.length;
+  const readingEnd = exercisesEnd + readingSections.length;
+  
+  const isVocabulary = currentStep < vocabEnd;
+  const isExercise = currentStep >= vocabEnd && currentStep < exercisesEnd;
+  const isReading = currentStep >= exercisesEnd && currentStep < readingEnd;
+  const isListening = currentStep >= readingEnd;
+  
   const vocabularyData = isVocabulary ? vocabulary[currentStep] : null;
-  const exerciseData = !isVocabulary ? exercises[currentStep - vocabulary.length] : null;
+  const exerciseData = isExercise ? exercises[currentStep - vocabEnd] : null;
+  const readingData = isReading ? readingSections[currentStep - exercisesEnd] : null;
+  const listeningData = isListening ? listeningSections[currentStep - readingEnd] : null;
+
+  const isCurrentStepCompleted =
+    isVocabulary ||
+    (isExercise && completedExercises.includes(currentStep - vocabEnd)) ||
+    (isReading && completedExercises.includes(currentStep)) ||
+    (isListening && completedExercises.includes(currentStep));
+  const canGoNext = isCurrentStepCompleted;
 
   return (
     <div className="min-h-screen bg-background">
@@ -750,12 +763,22 @@ const LessonDetail = () => {
                       <BookOpen className="w-5 h-5" />
                       Vocabulario
                     </>
-                  ) : (
+                  ) : isExercise ? (
                     <>
                       <Target className="w-5 h-5" />
                       Ejercicio
                     </>
-                  )}
+                  ) : isReading ? (
+                    <>
+                      <FileText className="w-5 h-5" />
+                      Comprensión de Lectura
+                    </>
+                  ) : isListening ? (
+                    <>
+                      <Headphones className="w-5 h-5" />
+                      Comprensión Auditiva
+                    </>
+                  ) : null}
                 </CardTitle>
               </CardHeader>
               
@@ -833,11 +856,11 @@ const LessonDetail = () => {
                 ) : exerciseData ? (
                   <ExerciseComponent 
                     exercise={exerciseData}
-                    exerciseIndex={currentStep - vocabulary.length}
-                    isCompleted={completedExercises.includes(currentStep - vocabulary.length)}
+                    exerciseIndex={currentStep - vocabEnd}
+                    isCompleted={completedExercises.includes(currentStep - vocabEnd)}
                     onComplete={() => {
-                      if (!completedExercises.includes(currentStep - vocabulary.length)) {
-                        setCompletedExercises([...completedExercises, currentStep - vocabulary.length]);
+                      if (!completedExercises.includes(currentStep - vocabEnd)) {
+                        setCompletedExercises([...completedExercises, currentStep - vocabEnd]);
                         toast({
                           title: "¡Ejercicio completado!",
                           description: "Buen trabajo, sigue así.",
@@ -849,32 +872,102 @@ const LessonDetail = () => {
                     stop={stop}
                     isSpeaking={isSpeaking}
                   />
+                ) : readingData ? (
+                  <ReadingComprehension
+                    passage={readingData.passage}
+                    title={readingData.title || "Reading Comprehension"}
+                    questions={readingData.questions || []}
+                    lang={readingData.lang || 'en-US'}
+                    onComplete={(score, total) => {
+                      if (!completedExercises.includes(currentStep)) {
+                        setCompletedExercises([...completedExercises, currentStep]);
+                        toast({
+                          title: "¡Lectura completada!",
+                          description: `Puntuación: ${score}/${total}`,
+                          variant: "default",
+                        });
+                      }
+                    }}
+                  />
+                ) : listeningData ? (
+                  <div className="space-y-6">
+                    <AudioPlayer
+                      audioUrl={listeningData.audioUrl}
+                      textToSpeech={listeningData.textToSpeech}
+                      lang={listeningData.lang || 'en-US'}
+                      title={listeningData.title || "Listening Exercise"}
+                      transcript={listeningData.transcript}
+                    />
+                    {!completedExercises.includes(currentStep) && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setCompletedExercises((prev) => (prev.includes(currentStep) ? prev : [...prev, currentStep]));
+                          toast({ title: "Listo", description: "Puedes continuar al siguiente paso.", variant: "default" });
+                        }}
+                      >
+                        Marcar como escuchado y continuar
+                      </Button>
+                    )}
+                    {listeningData.questions && listeningData.questions.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-lg font-semibold mb-4">Preguntas de Comprensión</h3>
+                        <div className="space-y-4">
+                          {listeningData.questions.map((q: any, qIndex: number) => (
+                            <div key={qIndex} className="space-y-2">
+                              <p className="font-medium">{q.question}</p>
+                              <div className="space-y-2">
+                                {q.options?.map((option: string, oIndex: number) => (
+                                  <Button
+                                    key={oIndex}
+                                    variant="outline"
+                                    className="w-full text-left justify-start"
+                                  >
+                                    <span className="font-semibold mr-2">
+                                      {String.fromCharCode(65 + oIndex)}.
+                                    </span>
+                                    {option}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : null}
               </CardContent>
             </Card>
 
             {/* Navigation */}
-            <div className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={handlePrevStep}
-                disabled={currentStep === 0}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Anterior
-              </Button>
-              
-              {currentStep === totalSteps - 1 ? (
-                <Button variant="success" onClick={handleComplete}>
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Completar Lección
-                </Button>
-              ) : (
-                <Button variant="lesson" onClick={handleNextStep}>
-                  Siguiente
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+            <div className="flex flex-col gap-2">
+              {!canGoNext && (isExercise || isReading || isListening) && (
+                <p className="text-sm text-amber-600 dark:text-amber-500 text-center">
+                  Completa esta actividad para continuar al siguiente paso.
+                </p>
               )}
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={handlePrevStep}
+                  disabled={currentStep === 0}
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Anterior
+                </Button>
+                {currentStep === totalSteps - 1 ? (
+                  <Button variant="success" onClick={handleComplete} disabled={!canGoNext}>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Completar Lección
+                  </Button>
+                ) : (
+                  <Button variant="lesson" onClick={handleNextStep} disabled={!canGoNext}>
+                    Siguiente
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -918,13 +1011,25 @@ const LessonDetail = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Ejercicios:</span>
-                    <span>{completedExercises.length}/{exercises.length}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
                     <span>Vocabulario:</span>
                     <span>{Math.min(currentStep + 1, vocabulary.length)}/{vocabulary.length}</span>
                   </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Ejercicios:</span>
+                    <span>{completedExercises.filter(e => e < exercisesEnd).length}/{exercises.length}</span>
+                  </div>
+                  {readingSections.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>Lectura:</span>
+                      <span>{completedExercises.filter(e => e >= exercisesEnd && e < readingEnd).length}/{readingSections.length}</span>
+                    </div>
+                  )}
+                  {listeningSections.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span>Escucha:</span>
+                      <span>{completedExercises.filter(e => e >= readingEnd).length}/{listeningSections.length}</span>
+                    </div>
+                  )}
                   {timeSpent > 0 && (
                     <div className="flex justify-between text-sm">
                       <span>Tiempo:</span>

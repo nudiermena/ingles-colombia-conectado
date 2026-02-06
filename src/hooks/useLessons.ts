@@ -133,6 +133,33 @@ export const useLessons = (tenantId: string | null) => {
   };
 };
 
+/** Fetch lesson IDs assigned to a user in a tenant (for students: only show assigned lessons) */
+export const useAssignedLessonIds = (userId: string | undefined, tenantId: string | null) => {
+  const [assignedIds, setAssignedIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId || !tenantId) {
+      setAssignedIds([]);
+      setLoading(false);
+      return;
+    }
+    const fetchAssignments = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('user_lesson_assignments')
+        .select('lesson_id')
+        .eq('user_id', userId)
+        .eq('tenant_id', tenantId);
+      if (!error) setAssignedIds((data || []).map((r) => r.lesson_id));
+      setLoading(false);
+    };
+    fetchAssignments();
+  }, [userId, tenantId]);
+
+  return { assignedLessonIds: assignedIds, loading };
+};
+
 export const useLessonProgress = (userId: string | undefined, tenantId: string | null) => {
   const [progress, setProgress] = useState<LessonProgress[]>([]);
   const [loading, setLoading] = useState(true);

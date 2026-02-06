@@ -12,6 +12,9 @@ const Demo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
+  const [fillAnswer, setFillAnswer] = useState("");
+  const [readingAnswer, setReadingAnswer] = useState<number | null>(null);
+  const [listeningPlaying, setListeningPlaying] = useState(false);
 
   const demoSteps = [
     {
@@ -29,11 +32,46 @@ const Demo = () => {
       correct: 0
     },
     {
+      title: "Completar espacio en blanco",
+      type: "fill",
+      question: "I ___ a student.",
+      answer: "am",
+      hint: "Verbo 'to be' en primera persona"
+    },
+    {
+      title: "Comprensión de Lectura",
+      type: "reading",
+      passage: "My name is Ana. I am from Colombia. I study English every day. I like reading and listening to music.",
+      question: "Where is Ana from?",
+      options: ["Mexico", "Colombia", "Spain", "Argentina"],
+      correct: 1
+    },
+    {
+      title: "Comprensión Auditiva",
+      type: "listening",
+      text: "The weather is nice today. It is sunny and warm.",
+      tip: "Escucha el audio y practica la comprensión."
+    },
+    {
       title: "Pronunciación",
       type: "pronunciation",
       content: "Good morning",
       phonetic: "/ɡʊd ˈmɔːnɪŋ/",
       tip: "Practica la pronunciación clara de cada palabra"
+    },
+    {
+      title: "Más vocabulario: Números",
+      type: "vocabulary",
+      content: "One, Two, Three",
+      translation: "Uno, Dos, Tres",
+      audio: "/audio/numbers.mp3"
+    },
+    {
+      title: "Quiz final",
+      type: "quiz",
+      question: "¿Cómo se dice 'Gracias' en inglés?",
+      options: ["Please", "Thank you", "Sorry", "Hello"],
+      correct: 1
     }
   ];
 
@@ -47,6 +85,8 @@ const Demo = () => {
       setCurrentStep(currentStep + 1);
       setSelectedAnswer(null);
       setShowResult(false);
+      setFillAnswer("");
+      setReadingAnswer(null);
     }
   };
 
@@ -54,6 +94,15 @@ const Demo = () => {
     setCurrentStep(0);
     setSelectedAnswer(null);
     setShowResult(false);
+    setFillAnswer("");
+    setReadingAnswer(null);
+  };
+
+  const canAdvance = () => {
+    const d = demoSteps[currentStep];
+    if (d.type === "quiz" || (d.type === "reading" && "correct" in d)) return showResult || selectedAnswer !== null;
+    if (d.type === "fill") return showResult;
+    return true;
   };
 
   const currentDemo = demoSteps[currentStep];
@@ -95,7 +144,10 @@ const Demo = () => {
                 <CardTitle className="text-xl">{currentDemo.title}</CardTitle>
                 <Badge variant="secondary">
                   {currentDemo.type === 'vocabulary' ? 'Vocabulario' :
-                   currentDemo.type === 'quiz' ? 'Quiz' : 'Pronunciación'}
+                   currentDemo.type === 'quiz' ? 'Quiz' :
+                   currentDemo.type === 'fill' ? 'Completar' :
+                   currentDemo.type === 'reading' ? 'Comprensión de Lectura' :
+                   currentDemo.type === 'listening' ? 'Comprensión Auditiva' : 'Pronunciación'}
                 </Badge>
               </div>
             </CardHeader>
@@ -210,7 +262,7 @@ const Demo = () => {
                   <Button 
                     variant="hero" 
                     onClick={nextStep}
-                    disabled={currentDemo.type === 'quiz' && !showResult}
+                    disabled={!canAdvance()}
                   >
                     Siguiente
                   </Button>

@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Shield, Building2, Users, BookOpen, UserCog, Mail, Loader2, GraduationCap, FileText, List } from "lucide-react";
+import { Shield, Building2, Users, BookOpen, UserCog, Mail, Loader2, GraduationCap, FileText, List, Video } from "lucide-react";
 import TenantsManagement from "@/components/admin/TenantsManagement";
 import UsersManagement from "@/components/admin/UsersManagement";
 import LessonsManagement from "@/components/admin/LessonsManagement";
@@ -15,6 +15,7 @@ import InvitationsManagement from "@/components/admin/InvitationsManagement";
 import CoursesManagement from "@/components/admin/CoursesManagement";
 import UnitsManagement from "@/components/admin/UnitsManagement";
 import UnitContentManagement from "@/components/admin/UnitContentManagement";
+import CourseResourcesManagement from "@/components/admin/CourseResourcesManagement";
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -105,7 +106,7 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-9">
             <TabsTrigger value="invitations" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               <span className="hidden sm:inline">Invitaciones</span>
@@ -137,6 +138,11 @@ const Admin = () => {
               <List className="w-4 h-4" />
               <span className="hidden sm:inline">Contenido</span>
               <span className="sm:hidden">Con</span>
+            </TabsTrigger>
+            <TabsTrigger value="resources" className="flex items-center gap-2">
+              <Video className="w-4 h-4" />
+              <span className="hidden sm:inline">Recursos</span>
+              <span className="sm:hidden">Rec</span>
             </TabsTrigger>
             <TabsTrigger value="lessons" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
@@ -190,6 +196,10 @@ const Admin = () => {
 
           <TabsContent value="unit-content" className="space-y-4">
             <UnitContentManagement currentTenant={currentTenant} />
+          </TabsContent>
+
+          <TabsContent value="resources" className="space-y-4">
+            <CourseResourcesManagement currentTenant={currentTenant} />
           </TabsContent>
 
           <TabsContent value="lessons" className="space-y-4">
