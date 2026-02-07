@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useTenant } from "@/hooks/useTenant";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   BookOpen, 
   Play, 
@@ -54,6 +58,26 @@ const skills = [
 ];
 
 const LevelA1 = () => {
+  const { user } = useAuth();
+  const { currentTenant } = useTenant(user?.id);
+  const [studentCount, setStudentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!currentTenant?.id) {
+      setStudentCount(null);
+      return;
+    }
+    (async () => {
+      const { count, error } = await (supabase as any)
+        .from("user_roles")
+        .select("*", { count: "exact", head: true })
+        .eq("tenant_id", currentTenant.id)
+        .eq("role", "student");
+      if (!error) setStudentCount(count ?? 0);
+      else setStudentCount(0);
+    })();
+  }, [currentTenant?.id]);
+
   const completedLessons = lessons.filter(lesson => lesson.completed).length;
   const totalLessons = lessons.length;
   const overallProgress = Math.round((completedLessons / totalLessons) * 100);
@@ -115,7 +139,7 @@ const LevelA1 = () => {
               <h2 className="text-2xl font-bold">Lecciones</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="w-4 h-4" />
-                <span>+2,500 estudiantes en este nivel</span>
+                <span>{studentCount !== null ? `${studentCount} estudiante${studentCount !== 1 ? "s" : ""} en esta organización` : "—"}</span>
               </div>
             </div>
 

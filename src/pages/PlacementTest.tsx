@@ -6,12 +6,17 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { CheckCircle2, ArrowRight, BookOpen, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useTenant } from "@/hooks/useTenant";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { CheckCircle2, ArrowRight, BookOpen, Loader2 } from "lucide-react";
 import { getAdaptiveTestQuestions, calculateLevel, type PlacementQuestion } from "@/data/placementTestQuestions";
 
 const PlacementTest = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { currentTenant } = useTenant(user?.id);
   const { toast } = useToast();
   const [questions, setQuestions] = useState<PlacementQuestion[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -19,6 +24,7 @@ const PlacementTest = () => {
   const [showResult, setShowResult] = useState(false);
   const [recommendedLevel, setRecommendedLevel] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [hasExistingResult, setHasExistingResult] = useState<boolean | null>(null);
 
   // Load questions on mount
   useEffect(() => {
@@ -27,6 +33,23 @@ const PlacementTest = () => {
     setLoading(false);
   }, []);
 
+  // Check if student already completed the test (block retake until teacher allows)
+  useEffect(() => {
+    if (!user?.id || !currentTenant?.id) {
+      setHasExistingResult(false);
+      return;
+    }
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("placement_test_results")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("tenant_id", currentTenant.id)
+        .maybeSingle();
+      setHasExistingResult(!!data);
+    })();
+  }, [user?.id, currentTenant?.id]);
+
   const handleAnswer = (answerIndex: number) => {
     const newAnswers = [...answers, answerIndex];
     setAnswers(newAnswers);
@@ -34,23 +57,44 @@ const PlacementTest = () => {
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
     } else {
-      calculateResult(newAnswers);
+      void calculateResult(newAnswers);
     }
   };
 
-  const calculateResult = (userAnswers: number[]) => {
+  const calculateResult = async (userAnswers: number[]) => {
     const level = calculateLevel(userAnswers, questions);
     setRecommendedLevel(level);
     setShowResult(true);
 
-    const correctAnswers = questions.reduce((acc, q, index) => {
-      return acc + (userAnswers[index] === q.correct ? 1 : 0);
-    }, 0);
-    const percentage = (correctAnswers / questions.length) * 100;
+    const totalAnswered = userAnswers.length;
+    const correctCount = userAnswers.filter((answer, index) =>
+      index < questions.length && answer === questions[index].correct
+    ).length;
+    const percentage = totalAnswered > 0 ? (correctCount / totalAnswered) * 100 : 0;
+
+    if (user?.id && currentTenant?.id) {
+      try {
+        await (supabase as any)
+          .from("placement_test_results")
+          .upsert(
+            {
+              user_id: user.id,
+              tenant_id: currentTenant.id,
+              recommended_level: level,
+              correct_count: correctCount,
+              total_questions: totalAnswered,
+              completed_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,tenant_id" }
+          );
+      } catch (e) {
+        console.error("Error saving placement test result:", e);
+      }
+    }
 
     toast({
       title: "Test Completado",
-      description: `Tu nivel recomendado es ${level}. Puntuación: ${correctAnswers}/${questions.length} (${Math.round(percentage)}%)`,
+      description: `Tu nivel recomendado es ${level}. Puntuación: ${correctCount}/${totalAnswered} (${Math.round(percentage)}%)`,
     });
   };
 
@@ -65,11 +109,36 @@ const PlacementTest = () => {
     setRecommendedLevel("");
   };
 
+  if (hasExistingResult === true && !showResult) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+              <CardHeader>
+                <CardTitle>Test de Nivelación ya completado</CardTitle>
+                <CardDescription>
+                  Ya realizaste el test de nivelación. No puedes volver a realizarlo hasta que tu profesor permita un nuevo intento.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => navigate("/lecciones")}>Ir a Mis Lecciones</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   if (showResult) {
-    const correctAnswers = answers.filter((answer, index) => 
-      answer === questions[index].correct
-    ).length;
-    const percentage = (correctAnswers / questions.length) * 100;
+    const totalAnswered = answers.length;
+    const correctAnswers = totalAnswered > 0
+      ? answers.filter((answer, index) => index < questions.length && answer === questions[index].correct).length
+      : 0;
+    const percentage = totalAnswered > 0 ? (correctAnswers / totalAnswered) * 100 : 0;
 
     return (
       <div className="min-h-screen bg-background">
@@ -92,7 +161,7 @@ const PlacementTest = () => {
                   Nivel {recommendedLevel}
                 </Badge>
                 <p className="text-muted-foreground">
-                  Respondiste correctamente {correctAnswers} de {questions.length} preguntas ({Math.round(percentage)}%)
+                  Respondiste correctamente {correctAnswers} de {totalAnswered} preguntas ({Math.round(percentage)}%)
                 </p>
                 {/* Show breakdown by level */}
                 <div className="mt-4 space-y-2 text-sm">
@@ -153,9 +222,9 @@ const PlacementTest = () => {
                       Comenzar Nivel {recommendedLevel}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
-                    <Button onClick={handleRetake} variant="outline" size="lg">
-                      Volver a Intentar
-                    </Button>
+                    <p className="text-sm text-muted-foreground self-center">
+                      Para volver a intentar el test, el profesor debe permitirlo desde el panel de seguimiento.
+                    </p>
                   </div>
                 </div>
               </CardContent>

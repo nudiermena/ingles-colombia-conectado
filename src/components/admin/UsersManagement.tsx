@@ -69,6 +69,8 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
   const [assigningUser, setAssigningUser] = useState<UserWithRole | null>(null);
   const [availableLessons, setAvailableLessons] = useState<{ id: string; title: string; level: string }[]>([]);
   const [assignedLessonIds, setAssignedLessonIds] = useState<string[]>([]);
+  const [assignmentDueDate, setAssignmentDueDate] = useState<string>("");
+  const [assignmentTimeLimitMinutes, setAssignmentTimeLimitMinutes] = useState<string>("");
   const [isAssigning, setIsAssigning] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -81,6 +83,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
   const [placementTestSelectedIds, setPlacementTestSelectedIds] = useState<Set<string>>(new Set());
   const [placementTestAssignedIds, setPlacementTestAssignedIds] = useState<Set<string>>(new Set());
   const [isAssigningPlacementTest, setIsAssigningPlacementTest] = useState(false);
+  const assignDialogUserHasChangedSelection = useRef(false);
 
   useEffect(() => {
     if (currentTenant) {
@@ -371,6 +374,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     if (!currentTenant) return;
     setAssigningUser(user);
     setAssignDialogOpen(true);
+    assignDialogUserHasChangedSelection.current = false;
     try {
       const { data: lessonsData } = await (supabase as any)
         .from('lessons')
@@ -383,10 +387,20 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
 
       const { data: assignments } = await (supabase as any)
         .from('user_lesson_assignments')
-        .select('lesson_id')
+        .select('lesson_id, due_date, time_limit_minutes')
         .eq('user_id', user.id)
         .eq('tenant_id', currentTenant.id);
-      setAssignedLessonIds((assignments || []).map(a => a.lesson_id));
+      if (!assignDialogUserHasChangedSelection.current) {
+        setAssignedLessonIds((assignments || []).map((a: { lesson_id: string }) => a.lesson_id));
+      }
+      const first = (assignments || [])[0];
+      if (first) {
+        setAssignmentDueDate(first.due_date ? String(first.due_date).slice(0, 16) : "");
+        setAssignmentTimeLimitMinutes(first.time_limit_minutes != null ? String(first.time_limit_minutes) : "");
+      } else {
+        setAssignmentDueDate("");
+        setAssignmentTimeLimitMinutes("");
+      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "No se pudieron cargar las lecciones", variant: "destructive" });
     }
@@ -560,6 +574,8 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     if (!currentTenant || !assigningUser) return;
     setIsAssigning(true);
     try {
+      const lessonById = new Map(availableLessons.map((l) => [l.id, l] as const));
+
       const { data: existing } = await (supabase as any)
         .from('user_lesson_assignments')
         .select('id, lesson_id')
@@ -569,20 +585,65 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       const toAdd = assignedLessonIds.filter(id => !existingIds.has(id));
       const toRemove = (existing || []).filter(e => !assignedLessonIds.includes(e.lesson_id));
 
+      const dueDateValue = assignmentDueDate.trim() ? new Date(assignmentDueDate).toISOString() : null;
+      const timeLimitValue = assignmentTimeLimitMinutes.trim() ? parseInt(assignmentTimeLimitMinutes, 10) : null;
+
       for (const a of toRemove) {
-        await (supabase as any).from('user_lesson_assignments').delete().eq('id', a.id);
+        const { error: delAssignError } = await (supabase as any).from('user_lesson_assignments').delete().eq('id', a.id);
+        if (delAssignError) throw delAssignError;
+        const { error: delProgressError } = await (supabase as any)
+          .from('lesson_progress')
+          .delete()
+          .eq('user_id', assigningUser.id)
+          .eq('tenant_id', currentTenant.id)
+          .eq('lesson_id', a.lesson_id);
+        if (delProgressError) {
+          console.warn('No se pudo borrar progreso al desasignar (¿migración aplicada?):', delProgressError);
+          toast({ title: "Aviso", description: "Asignación actualizada. Si el estudiante ya tenía progreso, aplica la migración de permisos para que al reasignar empiece desde cero.", variant: "secondary" });
+        }
       }
       for (const lessonId of toAdd) {
-        await (supabase as any).from('user_lesson_assignments').insert({
+        const { error: delProgressError } = await (supabase as any)
+          .from('lesson_progress')
+          .delete()
+          .eq('user_id', assigningUser.id)
+          .eq('tenant_id', currentTenant.id)
+          .eq('lesson_id', lessonId);
+        if (delProgressError) {
+          console.warn('No se pudo borrar progreso al reasignar (¿migración aplicada?):', delProgressError);
+          toast({ title: "Aviso", description: "Lección asignada. Si el estudiante ya tenía progreso, aplica la migración de permisos para que empiece desde cero.", variant: "secondary" });
+        }
+        const { error: insertError } = await (supabase as any).from('user_lesson_assignments').insert({
           user_id: assigningUser.id,
           tenant_id: currentTenant.id,
           lesson_id: lessonId,
           assigned_by: currentUser?.id,
+          due_date: dueDateValue,
+          time_limit_minutes: timeLimitValue,
         }).select();
+        if (insertError) throw insertError;
       }
+      const toUpdate = (existing || []).filter((e: { lesson_id: string }) => assignedLessonIds.includes(e.lesson_id));
+      for (const row of toUpdate) {
+        await (supabase as any).from('user_lesson_assignments').update({ due_date: dueDateValue, time_limit_minutes: timeLimitValue }).eq('id', (row as { id: string }).id);
+      }
+
+      // Optimistic: update summary in the grid immediately (avoid needing a manual refresh).
+      const nextByLevel: Record<string, number> = {};
+      for (const lessonId of assignedLessonIds) {
+        const level = lessonById.get(lessonId)?.level;
+        if (!level) continue;
+        nextByLevel[level] = (nextByLevel[level] || 0) + 1;
+      }
+      setAssignedSummaryByUserId((prev) => ({
+        ...prev,
+        [assigningUser.id]: { total: assignedLessonIds.length, byLevel: nextByLevel },
+      }));
+
       toast({ title: "Lecciones asignadas", description: "Las lecciones han sido actualizadas correctamente" });
       setAssignDialogOpen(false);
       setAssigningUser(null);
+      await fetchUsers();
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "No se pudieron guardar las asignaciones", variant: "destructive" });
     } finally {
@@ -994,16 +1055,72 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       {/* Assign Lessons Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={(open) => {
         setAssignDialogOpen(open);
-        if (!open) setAssigningUser(null);
+        if (!open) { setAssigningUser(null); setAssignmentDueDate(""); setAssignmentTimeLimitMinutes(""); }
       }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Asignar Lecciones a {assigningUser?.full_name || "Estudiante"}</DialogTitle>
             <DialogDescription>
-              Selecciona las lecciones que el estudiante debe completar. Solo podrá descargar certificados al completar todas las lecciones asignadas.
+              Selecciona las lecciones que el estudiante debe completar. Opcionalmente define una fecha límite para temporizar las lecciones.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="assign-due-date">Fecha límite (opcional)</Label>
+                <Input
+                  id="assign-due-date"
+                  type="datetime-local"
+                  value={assignmentDueDate}
+                  onChange={(e) => setAssignmentDueDate(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+                <p className="text-xs text-muted-foreground">Fecha y hora tope.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="assign-time-limit">Límite en minutos (opcional)</Label>
+                <Input
+                  id="assign-time-limit"
+                  type="number"
+                  min={1}
+                  placeholder="Ej: 30"
+                  value={assignmentTimeLimitMinutes}
+                  onChange={(e) => setAssignmentTimeLimitMinutes(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">Tiempo permitido desde la asignación.</p>
+              </div>
+            </div>
+            {availableLessons.length > 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-sm text-muted-foreground">
+                  Seleccionadas: <span className="font-medium text-foreground">{assignedLessonIds.length}</span> / {availableLessons.length}
+                </div>
+                {(() => {
+                  const allLessonIds = availableLessons.map((l) => l.id);
+                  const assignedSet = new Set(assignedLessonIds);
+                  const allSelected = allLessonIds.length > 0 && allLessonIds.every((id) => assignedSet.has(id));
+                  const noneSelected = assignedLessonIds.length === 0;
+                  return (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isAssigning || noneSelected}
+                      onClick={() => {
+                        assignDialogUserHasChangedSelection.current = true;
+                        if (allSelected) {
+                          setAssignedLessonIds([]);
+                        } else if (!noneSelected) {
+                          setAssignedLessonIds([...allLessonIds]);
+                        }
+                      }}
+                    >
+                      {noneSelected ? "Ninguna seleccionada" : allSelected ? "Deseleccionar todo" : "Seleccionar todo"}
+                    </Button>
+                  );
+                })()}
+              </div>
+            )}
             {availableLessons.length === 0 ? (
               <p className="text-muted-foreground text-sm">No hay lecciones disponibles en esta organización.</p>
             ) : (
@@ -1023,9 +1140,12 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                               id={`assign-${lesson.id}`}
                               checked={assignedLessonIds.includes(lesson.id)}
                               onCheckedChange={(checked) => {
-                                setAssignedLessonIds(prev =>
-                                  checked ? [...prev, lesson.id] : prev.filter((id) => id !== lesson.id)
-                                );
+                                assignDialogUserHasChangedSelection.current = true;
+                                setAssignedLessonIds((prev) => {
+                                  const has = prev.includes(lesson.id);
+                                  if (checked) return has ? prev : [...prev, lesson.id];
+                                  return has ? prev.filter((id) => id !== lesson.id) : prev;
+                                });
                               }}
                             />
                             <label htmlFor={`assign-${lesson.id}`} className="flex-1 cursor-pointer">

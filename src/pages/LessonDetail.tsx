@@ -4,13 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
-import { useLessons, useLessonProgress } from "@/hooks/useLessons";
+import { useLessons, useLessonProgress, useAssignedLessonIds } from "@/hooks/useLessons";
 import { useTextToSpeech } from "@/hooks/useTextToSpeech";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { AudioPlayer } from "@/components/lesson/AudioPlayer";
 import { ReadingComprehension } from "@/components/lesson/ReadingComprehension";
 import { PronunciationRecorder } from "@/components/lesson/PronunciationRecorder";
@@ -37,10 +45,11 @@ interface ExerciseComponentProps {
   exercise: any;
   exerciseIndex: number;
   isCompleted: boolean;
-  onComplete: () => void;
+  onComplete: (correct?: boolean) => void;
   speak: (text: string, lang?: string) => void;
   stop: () => void;
   isSpeaking: boolean;
+  isPreparingSpeak?: boolean;
 }
 
 const ExerciseComponent = ({ 
@@ -50,7 +59,8 @@ const ExerciseComponent = ({
   onComplete,
   speak,
   stop,
-  isSpeaking
+  isSpeaking,
+  isPreparingSpeak = false,
 }: ExerciseComponentProps) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | number | null>(null);
   const [fillBlankAnswer, setFillBlankAnswer] = useState("");
@@ -77,11 +87,9 @@ const ExerciseComponent = ({
       setIsCorrect(correct);
       setShowFeedback(true);
       
-      if (correct) {
-        setTimeout(() => {
-          onComplete();
-        }, 1000);
-      }
+      setTimeout(() => {
+        onComplete(correct);
+      }, correct ? 1000 : 1500);
     }
   };
 
@@ -92,11 +100,9 @@ const ExerciseComponent = ({
     setIsCorrect(correct);
     setShowFeedback(true);
     
-    if (correct) {
-      setTimeout(() => {
-        onComplete();
-      }, 1000);
-    }
+    setTimeout(() => {
+      onComplete(correct);
+    }, correct ? 1000 : 1500);
   };
 
   const handleTranslation = () => {
@@ -106,11 +112,9 @@ const ExerciseComponent = ({
     setIsCorrect(correct);
     setShowFeedback(true);
     
-    if (correct) {
-      setTimeout(() => {
-        onComplete();
-      }, 1000);
-    }
+    setTimeout(() => {
+      onComplete(correct);
+    }, correct ? 1000 : 1500);
   };
 
   if (exercise.type === 'multiple-choice') {
@@ -418,6 +422,7 @@ const ExerciseComponent = ({
         onSpeakReference={speak}
         onStopReference={stop}
         isSpeakingReference={isSpeaking}
+        isPreparingReference={isPreparingSpeak}
       />
     );
   }
@@ -477,15 +482,54 @@ const LessonDetail = () => {
   
   const { lessons, loading: lessonsLoading } = useLessons(activeTenant?.id || null);
   const { getProgressForLesson, updateProgress } = useLessonProgress(user?.id, activeTenant?.id || null);
+  const { assignmentByLessonId } = useAssignedLessonIds(user?.id ?? undefined, activeTenant?.id ?? null);
   const { toast } = useToast();
-  const { speak, stop, isSpeaking } = useTextToSpeech();
+  const {
+    speak,
+    stop,
+    isSpeaking,
+    isPreparingSpeak,
+    isLoadingVoices,
+    isSupported,
+    voices,
+    preferredVoiceURI,
+    setPreferredVoice,
+  } = useTextToSpeech();
   
   const [currentStep, setCurrentStep] = useState(0);
   const [completedExercises, setCompletedExercises] = useState<number[]>([]);
+  const [correctExercises, setCorrectExercises] = useState<number[]>([]);
   const [startTime] = useState(Date.now());
   const [timeSpent, setTimeSpent] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
   const hasLoadedInitialProgress = useRef(false);
   const userHasNavigated = useRef(false);
+  const timeOverHandledRef = useRef(false);
+  const latestProgressRef = useRef({ currentStep: 0, completedExercises: [] as number[], correctExercises: [] as number[], timeSpent: 0 });
+
+  const assignment = id ? assignmentByLessonId[id] : null;
+  const effectiveDeadline = assignment?.effectiveDeadline ?? null;
+  const submittedAt = assignment?.submitted_at ?? null;
+  const timeLeftMs = effectiveDeadline ? new Date(effectiveDeadline).getTime() - now : null;
+  const deadlineExpired = timeLeftMs != null && timeLeftMs <= 0;
+  const isLowTime = timeLeftMs != null && timeLeftMs > 0 && timeLeftMs < 5 * 60 * 1000; // < 5 min
+
+  useEffect(() => {
+    const intervalMs = isLowTime ? 1000 : 60000;
+    const interval = setInterval(() => setNow(Date.now()), intervalMs);
+    return () => clearInterval(interval);
+  }, [isLowTime]);
+
+  const formatTimeLeft = () => {
+    if (timeLeftMs == null) return null;
+    if (timeLeftMs <= 0) return "El tiempo se ha acabado";
+    const h = Math.floor(timeLeftMs / (1000 * 60 * 60));
+    const m = Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((timeLeftMs % (1000 * 60)) / 1000);
+    if (h > 0) return `Quedan ${h} h ${m} min`;
+    if (m > 0) return `Quedan ${m} min ${s} s`;
+    return `Quedan ${s} s`;
+  };
 
   const lesson = lessons.find(l => l.id === id);
   const existingProgress = id ? getProgressForLesson(id) : null;
@@ -513,6 +557,7 @@ const LessonDetail = () => {
     if (shouldRestart) {
       setCurrentStep(0);
       setCompletedExercises([]);
+      setCorrectExercises([]);
       hasLoadedInitialProgress.current = true;
       return;
     }
@@ -527,6 +572,7 @@ const LessonDetail = () => {
       const savedStep = Math.floor((existingProgress.progress_percentage / 100) * totalSteps);
       setCurrentStep(savedStep);
       setCompletedExercises(existingProgress.exercise_results?.completed || []);
+      setCorrectExercises(existingProgress.exercise_results?.correct || []);
       hasLoadedInitialProgress.current = true;
     }
   }, [existingProgress, lesson, shouldRestart]);
@@ -550,32 +596,67 @@ const LessonDetail = () => {
     };
   }, [startTime, stop]);
 
+  // When time runs out: save progress and lock assignment (submitted_at)
   useEffect(() => {
-    // Auto-save progress
-    if (lesson && currentStep > 0) {
+    if (!deadlineExpired || timeOverHandledRef.current || !lesson || !user?.id || !activeTenant?.id || !id) return;
+    timeOverHandledRef.current = true;
+    (async () => {
+      try {
+        const vocab = lesson.content?.vocabulary?.length || 0;
+        const exer = lesson.content?.exercises?.length || 0;
+        const reading = lesson.content?.reading?.length || 0;
+        const listening = lesson.content?.listening?.length || 0;
+        const totalSteps = vocab + exer + reading + listening;
+        const progressPercentage = totalSteps > 0 ? Math.round((currentStep / totalSteps) * 100) : 0;
+        await updateProgress(lesson.id, {
+          progress_percentage: progressPercentage,
+          time_spent_minutes: timeSpent,
+          exercise_results: { completed: completedExercises, correct: correctExercises },
+        });
+        await (supabase as any)
+          .from("user_lesson_assignments")
+          .update({ submitted_at: new Date().toISOString() })
+          .eq("user_id", user.id)
+          .eq("tenant_id", activeTenant.id)
+          .eq("lesson_id", id);
+        toast({
+          title: "Tiempo acabado",
+          description: "Se ha guardado tu progreso. No podrás reintentar hasta que el profesor lo permita.",
+          variant: "default",
+        });
+        navigate("/lecciones");
+      } catch (e) {
+        console.error("Error saving on time over:", e);
+        toast({ title: "Error", description: "No se pudo guardar el progreso.", variant: "destructive" });
+      }
+    })();
+  }, [deadlineExpired, lesson, user?.id, activeTenant?.id, id, updateProgress, toast, navigate, currentStep, timeSpent, completedExercises, correctExercises]);
+
+  latestProgressRef.current = { currentStep, completedExercises, correctExercises, timeSpent };
+
+  useEffect(() => {
+    if (!lesson) return;
+    const timeoutId = setTimeout(async () => {
+      const { currentStep: step, completedExercises: completed, correctExercises: correct, timeSpent: spent } = latestProgressRef.current;
+      if (step === 0) return;
       const vocab = lesson.content?.vocabulary?.length || 0;
       const exer = lesson.content?.exercises?.length || 0;
       const reading = lesson.content?.reading?.length || 0;
       const listening = lesson.content?.listening?.length || 0;
       const totalSteps = vocab + exer + reading + listening;
-      const progressPercentage = Math.round((currentStep / totalSteps) * 100);
-      
-      const saveProgress = async () => {
-        try {
-          await updateProgress(lesson.id, {
-            progress_percentage: progressPercentage,
-            time_spent_minutes: timeSpent,
-            exercise_results: { completed: completedExercises },
-          });
-        } catch (error) {
-          console.error('Error saving progress:', error);
-        }
-      };
-
-      const timeoutId = setTimeout(saveProgress, 2000); // Debounce
-      return () => clearTimeout(timeoutId);
-    }
-  }, [currentStep, lesson, timeSpent, completedExercises, updateProgress]);
+      const progressPercentage = totalSteps > 0 ? Math.round((step / totalSteps) * 100) : 0;
+      try {
+        await updateProgress(lesson.id, {
+          progress_percentage: progressPercentage,
+          time_spent_minutes: spent,
+          exercise_results: { completed, correct },
+        });
+      } catch (error) {
+        console.error('Error saving progress:', error);
+      }
+    }, 2000);
+    return () => clearTimeout(timeoutId);
+  }, [currentStep, lesson, timeSpent, completedExercises, correctExercises, updateProgress]);
 
   if (tenantLoading) {
     return (
@@ -660,7 +741,7 @@ const LessonDetail = () => {
         progress_percentage: 100,
         completed: true,
         time_spent_minutes: timeSpent,
-        exercise_results: { completed: completedExercises },
+        exercise_results: { completed: completedExercises, correct: correctExercises },
       });
       
       toast({
@@ -696,6 +777,11 @@ const LessonDetail = () => {
   const vocabEnd = vocabulary.length;
   const exercisesEnd = vocabEnd + exercises.length;
   const readingEnd = exercisesEnd + readingSections.length;
+  const completedExerciseIndices = completedExercises.filter(e => e >= vocabEnd && e < exercisesEnd);
+  const correctCount = correctExercises.length;
+  const incorrectCount = Math.max(0, completedExerciseIndices.length - correctCount);
+  const scoreDenom = correctCount + incorrectCount;
+  const scorePct = scoreDenom > 0 ? Math.round((correctCount / scoreDenom) * 100) : null;
   
   const isVocabulary = currentStep < vocabEnd;
   const isExercise = currentStep >= vocabEnd && currentStep < exercisesEnd;
@@ -714,11 +800,55 @@ const LessonDetail = () => {
     (isListening && completedExercises.includes(currentStep));
   const canGoNext = isCurrentStepCompleted;
 
+  // Block access when assignment was submitted (time over or teacher locked)
+  if (submittedAt) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <Card className="max-w-lg mx-auto mt-8 border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+                Asignación entregada
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-muted-foreground">
+                Esta asignación ya fue entregada. No puedes volver a realizarla hasta que el profesor permita un reintento.
+              </p>
+              <Button onClick={() => navigate("/lecciones")}>
+                Volver a Lecciones
+              </Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
       <main className="container mx-auto px-4 py-8">
+        {/* Countdown banner: color and tick when low time */}
+        {effectiveDeadline && (
+          <div
+            className={`mb-4 rounded-lg border px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium ${
+              deadlineExpired
+                ? "bg-destructive/10 text-destructive border-destructive/30"
+                : isLowTime
+                  ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30 animate-pulse"
+                  : "bg-muted/50 text-muted-foreground border-border"
+            }`}
+          >
+            <Clock className="w-4 h-4 shrink-0" />
+            <span>{formatTimeLeft()}</span>
+          </div>
+        )}
+
         {/* Progress Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -808,22 +938,31 @@ const LessonDetail = () => {
                         variant="outline" 
                         size="lg"
                         onClick={() => {
+                          if (!isSupported) {
+                            toast({ title: "TTS no disponible", description: "Tu navegador no soporta text-to-speech.", variant: "destructive" });
+                            return;
+                          }
                           if (isSpeaking) {
                             stop();
                           } else {
-                            speak(vocabularyData.english, 'en-US');
+                            speak(vocabularyData.english, { lang: 'en-US' });
                           }
                         }}
                         className="w-full"
+                        disabled={isLoadingVoices || isPreparingSpeak}
                       >
-                        <Volume2 className="w-5 h-5 mr-2" />
-                        {isSpeaking ? "Detener" : "Pronunciación EN"}
+                        {(isLoadingVoices || isPreparingSpeak) ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Volume2 className="w-5 h-5 mr-2" />}
+                        {isLoadingVoices ? "Cargando voces..." : isPreparingSpeak ? "Preparando..." : isSpeaking ? "Detener" : "Pronunciación EN"}
                       </Button>
                       {vocabularyData.example && (
                         <Button 
                           variant="outline" 
                           size="lg"
                           onClick={() => {
+                            if (!isSupported) {
+                              toast({ title: "TTS no disponible", description: "Tu navegador no soporta text-to-speech.", variant: "destructive" });
+                              return;
+                            }
                             if (isSpeaking) {
                               stop();
                             } else {
@@ -841,36 +980,69 @@ const LessonDetail = () => {
                               exampleText = exampleText.replace(/\.+$/, '').trim();
                               
                               if (exampleText) {
-                                speak(exampleText, 'en-US');
+                                speak(exampleText, { lang: 'en-US' });
                               }
                             }
                           }}
                           className="w-full"
+                          disabled={isLoadingVoices || isPreparingSpeak}
                         >
-                          <Volume2 className="w-5 h-5 mr-2" />
-                          {isSpeaking ? "Detener" : "Ejemplo EN"}
+                          {(isLoadingVoices || isPreparingSpeak) ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Volume2 className="w-5 h-5 mr-2" />}
+                          {isLoadingVoices ? "Cargando voces..." : isPreparingSpeak ? "Preparando..." : isSpeaking ? "Detener" : "Ejemplo EN"}
                         </Button>
                       )}
                     </div>
+
+                    {isSupported && (
+                      <div className="max-w-md mx-auto pt-2">
+                        <div className="text-xs text-muted-foreground mb-2 text-left">
+                          Voz (Inglés)
+                        </div>
+                        <Select
+                          value={preferredVoiceURI || "__auto__"}
+                          onValueChange={(v) => setPreferredVoice(v === "__auto__" ? "" : v)}
+                          disabled={isLoadingVoices}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={isLoadingVoices ? "Cargando..." : "Selecciona una voz"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__auto__">Automática (recomendada)</SelectItem>
+                            {voices
+                              .filter((v) => (v.lang || "").toLowerCase().startsWith("en"))
+                              .map((v) => (
+                                <SelectItem key={v.voiceURI} value={v.voiceURI}>
+                                  {v.name} ({v.lang})
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                 ) : exerciseData ? (
                   <ExerciseComponent 
                     exercise={exerciseData}
                     exerciseIndex={currentStep - vocabEnd}
                     isCompleted={completedExercises.includes(currentStep - vocabEnd)}
-                    onComplete={() => {
-                      if (!completedExercises.includes(currentStep - vocabEnd)) {
-                        setCompletedExercises([...completedExercises, currentStep - vocabEnd]);
+                    onComplete={(correct?: boolean) => {
+                      const idx = currentStep - vocabEnd;
+                      if (!completedExercises.includes(idx)) {
+                        setCompletedExercises([...completedExercises, idx]);
                         toast({
-                          title: "¡Ejercicio completado!",
-                          description: "Buen trabajo, sigue así.",
-                          variant: "default",
+                          title: correct ? "¡Correcto!" : "Sigue intentando",
+                          description: correct ? "Buen trabajo, sigue así." : "Revisa la respuesta y continúa.",
+                          variant: correct ? "default" : "secondary",
                         });
+                      }
+                      if (correct === true && !correctExercises.includes(idx)) {
+                        setCorrectExercises([...correctExercises, idx]);
                       }
                     }}
                     speak={speak}
                     stop={stop}
                     isSpeaking={isSpeaking}
+                    isPreparingSpeak={isPreparingSpeak}
                   />
                 ) : readingData ? (
                   <ReadingComprehension
@@ -1008,6 +1180,24 @@ const LessonDetail = () => {
                   </div>
                   <p className="text-sm text-muted-foreground">Completado</p>
                 </div>
+
+                {scoreDenom > 0 && (
+                  <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+                    <div className="text-sm font-medium">Puntuación</div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-success">Correctas:</span>
+                      <span>{correctCount}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-destructive">Incorrectas:</span>
+                      <span>{incorrectCount}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-medium pt-1">
+                      <span>Score:</span>
+                      <span>{scorePct}%</span>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">

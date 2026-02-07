@@ -133,14 +133,28 @@ export const useLessons = (tenantId: string | null) => {
   };
 };
 
-/** Fetch lesson IDs assigned to a user in a tenant (for students: only show assigned lessons) */
+export type AssignmentDeadline = {
+  due_date: string | null;
+  assigned_at: string;
+  time_limit_minutes: number | null;
+  /** Computed: effective deadline ISO string (due_date, or assigned_at + time_limit_minutes) */
+  effectiveDeadline: string | null;
+  /** When set, student cannot retake until teacher allows */
+  submitted_at: string | null;
+};
+
+/** Fetch lesson IDs, due dates, and time limits assigned to a user (for students) */
 export const useAssignedLessonIds = (userId: string | undefined, tenantId: string | null) => {
   const [assignedIds, setAssignedIds] = useState<string[]>([]);
+  const [dueDateByLessonId, setDueDateByLessonId] = useState<Record<string, string | null>>({});
+  const [assignmentByLessonId, setAssignmentByLessonId] = useState<Record<string, AssignmentDeadline>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!userId || !tenantId) {
       setAssignedIds([]);
+      setDueDateByLessonId({});
+      setAssignmentByLessonId({});
       setLoading(false);
       return;
     }
@@ -148,16 +162,43 @@ export const useAssignedLessonIds = (userId: string | undefined, tenantId: strin
       setLoading(true);
       const { data, error } = await supabase
         .from('user_lesson_assignments')
-        .select('lesson_id')
+        .select('lesson_id, due_date, assigned_at, time_limit_minutes, submitted_at')
         .eq('user_id', userId)
         .eq('tenant_id', tenantId);
-      if (!error) setAssignedIds((data || []).map((r) => r.lesson_id));
+      if (!error) {
+        setAssignedIds((data || []).map((r: { lesson_id: string }) => r.lesson_id));
+        const byLesson: Record<string, string | null> = {};
+        const byAssignment: Record<string, AssignmentDeadline> = {};
+        (data || []).forEach((r: { lesson_id: string; due_date?: string | null; assigned_at: string; time_limit_minutes?: number | null; submitted_at?: string | null }) => {
+          const assignedAt = r.assigned_at ? new Date(r.assigned_at).getTime() : 0;
+          const dueDate = r.due_date ? new Date(r.due_date).getTime() : null;
+          const limitMs = (r.time_limit_minutes ?? 0) * 60 * 1000;
+          const deadlineFromLimit = limitMs > 0 ? assignedAt + limitMs : null;
+          const effective = dueDate != null && deadlineFromLimit != null
+            ? new Date(Math.min(dueDate, deadlineFromLimit)).toISOString()
+            : dueDate != null
+              ? new Date(dueDate).toISOString()
+              : deadlineFromLimit != null
+                ? new Date(deadlineFromLimit).toISOString()
+                : null;
+          byLesson[r.lesson_id] = effective;
+          byAssignment[r.lesson_id] = {
+            due_date: r.due_date ?? null,
+            assigned_at: r.assigned_at,
+            time_limit_minutes: r.time_limit_minutes ?? null,
+            effectiveDeadline: effective,
+            submitted_at: r.submitted_at ?? null,
+          };
+        });
+        setDueDateByLessonId(byLesson);
+        setAssignmentByLessonId(byAssignment);
+      }
       setLoading(false);
     };
     fetchAssignments();
   }, [userId, tenantId]);
 
-  return { assignedLessonIds: assignedIds, loading };
+  return { assignedLessonIds: assignedIds, dueDateByLessonId, assignmentByLessonId, loading };
 };
 
 export const useLessonProgress = (userId: string | undefined, tenantId: string | null) => {

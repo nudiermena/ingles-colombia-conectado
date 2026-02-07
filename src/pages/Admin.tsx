@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Shield, Building2, Users, BookOpen, UserCog, Mail, Loader2, GraduationCap, FileText, List, Video } from "lucide-react";
+import { Shield, Building2, Users, BookOpen, UserCog, Mail, Loader2, GraduationCap, FileText, List, Video, TrendingUp } from "lucide-react";
 import TenantsManagement from "@/components/admin/TenantsManagement";
 import UsersManagement from "@/components/admin/UsersManagement";
 import LessonsManagement from "@/components/admin/LessonsManagement";
@@ -16,6 +16,7 @@ import CoursesManagement from "@/components/admin/CoursesManagement";
 import UnitsManagement from "@/components/admin/UnitsManagement";
 import UnitContentManagement from "@/components/admin/UnitContentManagement";
 import CourseResourcesManagement from "@/components/admin/CourseResourcesManagement";
+import StudentsTracking from "@/components/admin/StudentsTracking";
 
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
@@ -106,7 +107,7 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-9">
+          <TabsList className="grid w-full grid-cols-6 lg:grid-cols-10">
             <TabsTrigger value="invitations" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               <span className="hidden sm:inline">Invitaciones</span>
@@ -123,6 +124,12 @@ const Admin = () => {
               <Users className="w-4 h-4" />
               <span className="hidden sm:inline">Usuarios</span>
               <span className="sm:hidden">Usr</span>
+            </TabsTrigger>
+
+            <TabsTrigger value="tracking" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Seguimiento</span>
+              <span className="sm:hidden">Seg</span>
             </TabsTrigger>
             <TabsTrigger value="courses" className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4" />
@@ -184,6 +191,10 @@ const Admin = () => {
               currentTenant={currentTenant}
               currentUserRole={role}
             />
+          </TabsContent>
+
+          <TabsContent value="tracking" className="space-y-4">
+            <StudentsTracking currentTenant={currentTenant} />
           </TabsContent>
 
           <TabsContent value="courses" className="space-y-4">

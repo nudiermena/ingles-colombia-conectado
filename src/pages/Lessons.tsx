@@ -29,14 +29,33 @@ const Lessons = () => {
   
   const { lessons, loading: lessonsLoading, fetchLessons } = useLessons(activeTenant?.id || null);
   const { progress, getProgressForLesson } = useLessonProgress(user?.id, activeTenant?.id || null);
-  const { assignedLessonIds, loading: assignedLoading } = useAssignedLessonIds(user?.id ?? undefined, activeTenant?.id ?? null);
+  const { assignedLessonIds, dueDateByLessonId, assignmentByLessonId, loading: assignedLoading } = useAssignedLessonIds(user?.id ?? undefined, activeTenant?.id ?? null);
   const roleInTenant = getRoleInTenant(activeTenant?.id ?? '');
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLevel, setSelectedLevel] = useState("Todos");
   const [hasPlacementTestAssigned, setHasPlacementTestAssigned] = useState(false);
+  const [hasPlacementTestCompleted, setHasPlacementTestCompleted] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTimeLeft = (deadline: string | null) => {
+    if (!deadline) return null;
+    const ms = new Date(deadline).getTime() - now;
+    if (ms <= 0) return { text: "Vencido", expired: true };
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    if (days > 0) return { text: `Quedan ${days} día${days !== 1 ? "s" : ""}`, expired: false };
+    if (hours > 0) return { text: `Quedan ${hours} h ${minutes} min`, expired: false };
+    return { text: `Quedan ${minutes} min`, expired: false };
+  };
 
   const isStudent = roleInTenant === 'student';
-  const lessonsForUser = isStudent && assignedLessonIds.length > 0
+  const lessonsForUser = isStudent
     ? lessons.filter((l) => assignedLessonIds.includes(l.id))
     : lessons;
 
@@ -61,13 +80,22 @@ const Lessons = () => {
   useEffect(() => {
     if (!user?.id || !activeTenant?.id) return;
     (async () => {
-      const { data } = await (supabase as any)
-        .from('placement_test_assignments')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('tenant_id', activeTenant.id)
-        .maybeSingle();
-      setHasPlacementTestAssigned(!!data);
+      const [{ data: assigned }, { data: result }] = await Promise.all([
+        (supabase as any)
+          .from('placement_test_assignments')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('tenant_id', activeTenant.id)
+          .maybeSingle(),
+        (supabase as any)
+          .from('placement_test_results')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('tenant_id', activeTenant.id)
+          .maybeSingle(),
+      ]);
+      setHasPlacementTestAssigned(!!assigned);
+      setHasPlacementTestCompleted(!!result);
     })();
   }, [user?.id, activeTenant?.id]);
 
@@ -166,14 +194,14 @@ const Lessons = () => {
                   Refrescar
                 </Button>
               </div>
-              {lessons.length > 0 && (
-                <div className="text-sm text-muted-foreground">
-                  {lessons.length} lección{lessons.length !== 1 ? 'es' : ''} disponible{lessons.length !== 1 ? 's' : ''}
-                </div>
-              )}
+              <div className="text-sm text-muted-foreground">
+                {isStudent
+                  ? `${lessonsForUser.length} lección${lessonsForUser.length !== 1 ? 'es' : ''} asignada${lessonsForUser.length !== 1 ? 's' : ''}`
+                  : `${lessons.length} lección${lessons.length !== 1 ? 'es' : ''} disponible${lessons.length !== 1 ? 's' : ''}`}
+              </div>
             </div>
 
-        {isStudent && hasPlacementTestAssigned && (
+        {isStudent && hasPlacementTestAssigned && !hasPlacementTestCompleted && (
           <div className="mb-6 p-4 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <ClipboardList className="w-5 h-5 text-primary" />
@@ -208,24 +236,39 @@ const Lessons = () => {
                 {level}
               </Button>
             ))}
-            <Button variant="secondary" size="sm" asChild>
-              <Link to="/placement-test">
-                <ClipboardList className="w-4 h-4 mr-2" />
-                Test de Nivelación
-              </Link>
-            </Button>
+            {!(isStudent && hasPlacementTestCompleted) && (
+              <Button variant="secondary" size="sm" asChild>
+                <Link to="/placement-test">
+                  <ClipboardList className="w-4 h-4 mr-2" />
+                  Test de Nivelación
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* How it works: Lecciones → click a lesson → opens /leccion/:id with full content (vocabulary, exercises, reading, listening) */}
-        <div className="mb-6 p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
-          <strong className="text-foreground">Cómo usar:</strong> Haz clic en <strong>Comenzar</strong> o <strong>Repasar</strong> en cualquier tarjeta para abrir la lección. Dentro verás vocabulario, ejercicios y, en lecciones mejoradas, comprensión de lectura y auditiva. ¿No sabes tu nivel? Prueba el <Link to="/placement-test" className="text-primary font-medium hover:underline">Test de Nivelación</Link>.
-        </div>
+        {/* How it works: hide for students who already completed placement test */}
+        {!(isStudent && hasPlacementTestCompleted) && (
+          <div className="mb-6 p-4 rounded-lg bg-muted/50 border border-border text-sm text-muted-foreground">
+            <strong className="text-foreground">Cómo usar:</strong> Haz clic en <strong>Comenzar</strong> o <strong>Repasar</strong> en cualquier tarjeta para abrir la lección. Dentro verás vocabulario, ejercicios y, en lecciones mejoradas, comprensión de lectura y auditiva. ¿No sabes tu nivel? Prueba el <Link to="/placement-test" className="text-primary font-medium hover:underline">Test de Nivelación</Link>.
+          </div>
+        )}
 
         {/* Lessons Grid */}
+        {isStudent && lessonsForUser.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 p-12 text-center">
+            <p className="text-muted-foreground mb-2">No tienes lecciones asignadas.</p>
+            <p className="text-sm text-muted-foreground">Pide a tu profesor que te asigne lecciones desde el panel de administración.</p>
+          </div>
+        ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLessons.map((lesson, index) => {
             const { completed, progress: lessonProgress } = getLessonProgress(lesson.id);
+            const dueDate = dueDateByLessonId[lesson.id];
+            const dueDateObj = dueDate ? new Date(dueDate) : null;
+            const timeLeft = formatTimeLeft(dueDate);
+            const assignment = assignmentByLessonId[lesson.id];
+            const isSubmitted = !!assignment?.submitted_at;
             return (
               <Card 
                 key={lesson.id} 
@@ -247,6 +290,11 @@ const Lessons = () => {
                         <BookOpen className="w-3 h-3 text-success-foreground" />
                       </div>
                     )}
+                    {isSubmitted && (
+                      <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                        Entregada
+                      </Badge>
+                    )}
                   </div>
                   
                   <CardTitle className="text-lg group-hover:text-primary transition-colors">
@@ -262,6 +310,13 @@ const Lessons = () => {
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {lesson.objectives?.[0] || "Lección de inglés"}
                   </p>
+                  
+                  {dueDate && (
+                    <div className={`flex items-center gap-2 text-sm ${timeLeft?.expired ? "text-destructive" : "text-muted-foreground"}`}>
+                      <Clock className="w-4 h-4" />
+                      <span>{timeLeft?.text ?? `Límite: ${dueDateObj!.toLocaleDateString()}`}</span>
+                    </div>
+                  )}
                   
                   {lessonProgress > 0 && lessonProgress < 100 && (
                     <div className="space-y-2">
@@ -290,16 +345,16 @@ const Lessons = () => {
                   </div>
 
                   <Button 
-                    variant={completed ? "success" : "lesson"} 
+                    variant={completed && !isSubmitted ? "success" : "lesson"} 
                     className="w-full group"
                     asChild
                   >
                     <Link 
                       to={`/leccion/${lesson.id}`} 
-                      state={{ selectedTenant: activeTenant, restart: completed }}
+                      state={{ selectedTenant: activeTenant, restart: completed && !isSubmitted }}
                     >
                       <Play className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" />
-                      {completed ? "Repasar" : "Comenzar"}
+                      {isSubmitted ? "Ver (entregada)" : completed ? "Repasar" : "Comenzar"}
                       <ChevronRight className="w-4 h-4 ml-auto group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </Button>
@@ -308,8 +363,9 @@ const Lessons = () => {
             );
           })}
         </div>
+        )}
 
-        {filteredLessons.length === 0 && (
+        {filteredLessons.length === 0 && !(isStudent && lessonsForUser.length === 0) && (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-muted-foreground" />

@@ -28,8 +28,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Plus, Edit, Trash2, Loader2, BookOpen } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Loader2, BookOpen, Download } from "lucide-react";
 import type { Tenant } from "@/hooks/useTenant";
+import { jsPDF } from "jspdf";
 
 interface UnitsManagementProps {
   currentTenant: Tenant | null;
@@ -61,6 +62,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [downloadingPdfUnitId, setDownloadingPdfUnitId] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
   const [formData, setFormData] = useState({
     course_id: "",
@@ -248,6 +250,83 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
     }
   };
 
+  const downloadLessonPlanPdf = async (unit: Unit) => {
+    setDownloadingPdfUnitId(unit.id);
+    try {
+      const { data: contentRows, error } = await supabase
+        .from("unit_content")
+        .select("content_type, title, content, order_index")
+        .eq("unit_id", unit.id)
+        .order("order_index", { ascending: true });
+
+      if (error) throw error;
+
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const course = unit.course || selectedCourse;
+      const courseLabel = course
+        ? `Options ${course.course_number} - ${course.cefr_level}`
+        : "Curso";
+
+      let y = 20;
+      doc.setFontSize(18);
+      doc.text("Plan de clase", 20, y);
+      y += 10;
+      doc.setFontSize(12);
+      doc.text(`Unidad: ${unit.title}`, 20, y);
+      y += 7;
+      doc.text(`Curso: ${courseLabel}`, 20, y);
+      y += 7;
+      doc.text(unit.is_welcome_unit ? "Tipo: Welcome Unit" : `Unidad ${unit.unit_number ?? ""}`, 20, y);
+      y += 12;
+
+      doc.setFontSize(14);
+      doc.text("Contenido de la unidad", 20, y);
+      y += 8;
+
+      const contentTypes: Record<string, string> = {
+        vocabulary: "Vocabulario",
+        grammar: "Gramática",
+        listening: "Comprensión auditiva",
+        reading: "Comprensión de lectura",
+        speaking: "Expresión oral",
+        writing: "Expresión escrita",
+        learning_for_life: "Learning for life",
+        culture_clil: "Culture / CLIL",
+      };
+
+      (contentRows || []).forEach((row: { content_type: string; title?: string; order_index?: number }) => {
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+        doc.setFontSize(11);
+        const typeLabel = contentTypes[row.content_type] || row.content_type;
+        const title = row.title || typeLabel;
+        doc.text(`• ${typeLabel}: ${title}`, 20, y);
+        y += 6;
+      });
+
+      if (!contentRows?.length) {
+        doc.setFontSize(10);
+        doc.text("(Sin contenido registrado aún)", 25, y);
+      }
+
+      doc.save(`plan-clase-${unit.title.replace(/[^a-z0-9]/gi, "-").slice(0, 40)}.pdf`);
+      toast({
+        title: "PDF descargado",
+        description: "Plan de clase listo para imprimir.",
+      });
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err?.message || "No se pudo generar el PDF",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingPdfUnitId(null);
+    }
+  };
+
   const selectedCourse = courses.find((c) => c.id === selectedCourseId);
 
   if (!currentTenant) {
@@ -350,6 +429,19 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
                     <TableCell>{unit.title}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => downloadLessonPlanPdf(unit)}
+                          disabled={isLoading || downloadingPdfUnitId === unit.id}
+                          title="Descargar plan de clase (PDF)"
+                        >
+                          {downloadingPdfUnitId === unit.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
