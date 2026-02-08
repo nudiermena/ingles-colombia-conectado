@@ -533,15 +533,15 @@ const Demo = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button variant="secondary" size="lg" asChild>
-                <Link to="/signup">
-                  Crear Cuenta Gratis
+                <Link to="/login">
+                Ya tengo cuenta
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10" asChild>
+              {/* <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10" asChild>
                 <Link to="/login">
                   Ya tengo cuenta
                 </Link>
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
