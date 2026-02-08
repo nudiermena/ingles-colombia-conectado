@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 const AcceptInvitation = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
-  const { user, signIn } = useAuth();
+  const { user } = useAuth();
   const { getInvitationByToken, acceptInvitation, loading } = useInvitationAcceptance();
   const { refreshTenants } = useTenant(user?.id);
   const { toast } = useToast();
@@ -62,7 +62,6 @@ const AcceptInvitation = () => {
     if (!token || !invitation) return;
 
     if (!user) {
-      // Redirect to signup with invitation token
       navigate(`/signup?invitation=${token}`);
       return;
     }
@@ -75,10 +74,9 @@ const AcceptInvitation = () => {
         await refreshTenants();
         toast({
           title: "¡Invitación aceptada!",
-          description: `Has sido agregado a ${(invitation as any).tenant?.name || 'la organización'} como ${invitation.role === 'admin' ? 'Administrador' : invitation.role === 'teacher' ? 'Profesor' : 'Estudiante'}`,
+          description: `Has sido agregado a ${invitation.tenant?.name || 'la organización'} como ${getRoleLabel(invitation.role)}`,
         });
         
-        // Redirect based on role
         if (invitation.role === 'admin' || invitation.role === 'teacher') {
           navigate('/admin');
         } else {
@@ -106,7 +104,7 @@ const AcceptInvitation = () => {
   const getRoleColor = (role: string) => {
     const colors: Record<string, string> = {
       admin: "bg-primary/10 text-primary",
-      teacher: "bg-secondary/10 text-secondary",
+      teacher: "bg-secondary/10 text-secondary-foreground",
       student: "bg-muted text-muted-foreground",
     };
     return colors[role] || colors.student;
@@ -116,7 +114,7 @@ const AcceptInvitation = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 py-8 flex items-center justify-center">
+        <main className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-4" />
             <p className="text-muted-foreground">Cargando invitación...</p>
@@ -131,7 +129,7 @@ const AcceptInvitation = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="container mx-auto px-4 py-8 flex items-center justify-center">
+        <main className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
           <Card className="max-w-md w-full">
             <CardHeader>
               <div className="flex items-center justify-center mb-4">
@@ -161,14 +159,14 @@ const AcceptInvitation = () => {
   }
 
   const isExpired = new Date(invitation.expires_at) < new Date();
-  const isAccepted = invitation.status === 'accepted';
+  const isAccepted = invitation.status === 'accepted' || invitation.accepted_at;
   const isCancelled = invitation.status === 'cancelled';
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="container mx-auto px-4 py-8 flex items-center justify-center">
+      <main className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md w-full">
           <CardHeader>
             <div className="flex items-center justify-center mb-4">
@@ -206,7 +204,7 @@ const AcceptInvitation = () => {
                   <div className="flex-1">
                     <p className="text-sm text-muted-foreground">Organización</p>
                     <p className="font-semibold">
-                      {(invitation as any).tenant?.name || invitation.email}
+                      {invitation.tenant?.name || 'Organización'}
                     </p>
                   </div>
                 </div>
@@ -237,7 +235,7 @@ const AcceptInvitation = () => {
                   </p>
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1" asChild>
-                      <Link to="/login">Iniciar Sesión</Link>
+                      <Link to={`/login?redirect=/accept-invitation/${token}`}>Iniciar Sesión</Link>
                     </Button>
                     <Button className="flex-1" asChild>
                       <Link to={`/signup?invitation=${token}`}>Crear Cuenta</Link>
@@ -245,11 +243,11 @@ const AcceptInvitation = () => {
                   </div>
                 </div>
               ) : user.email?.toLowerCase() !== invitation.email.toLowerCase() ? (
-                <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
+                <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                   <div className="flex items-start gap-2">
-                    <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-destructive mt-0.5" />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-warning">Email no coincide</p>
+                      <p className="text-sm font-medium text-destructive">Email no coincide</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Esta invitación es para {invitation.email}, pero has iniciado sesión como {user.email}
                       </p>
@@ -295,4 +293,3 @@ const AcceptInvitation = () => {
 };
 
 export default AcceptInvitation;
-

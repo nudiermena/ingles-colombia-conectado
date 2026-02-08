@@ -26,6 +26,7 @@ import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
 import Admin from "./pages/Admin";
 import AcceptInvitation from "./pages/AcceptInvitation";
+import InviteUsers from "./pages/InviteUsers";
 import StudentDashboard from "./pages/StudentDashboard";
 import SeedLessons from "./pages/SeedLessons";
 import PlacementTest from "./pages/PlacementTest";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/admin" element={<Admin />} />
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/accept-invitation/:token" element={<AcceptInvitation />} />
+            <Route path="/invite" element={<InviteUsers />} />
             <Route path="/seed-lessons" element={<SeedLessons />} />
             <Route path="/placement-test" element={<PlacementTest />} />
             <Route path="/cursos" element={<Courses />} />
