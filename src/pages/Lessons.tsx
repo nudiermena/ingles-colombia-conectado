@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,8 +31,11 @@ const Lessons = () => {
   const { progress, getProgressForLesson } = useLessonProgress(user?.id, activeTenant?.id || null);
   const { assignedLessonIds, dueDateByLessonId, assignmentByLessonId, loading: assignedLoading } = useAssignedLessonIds(user?.id ?? undefined, activeTenant?.id ?? null);
   const roleInTenant = getRoleInTenant(activeTenant?.id ?? '');
+  const [searchParams] = useSearchParams();
+  const levelParam = searchParams.get("level")?.toUpperCase();
+  const initialLevel = levelParam && ["A1", "A2", "B1", "B2"].includes(levelParam) ? levelParam : "Todos";
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("Todos");
+  const [selectedLevel, setSelectedLevel] = useState(initialLevel);
   const [hasPlacementTestAssigned, setHasPlacementTestAssigned] = useState(false);
   const [hasPlacementTestCompleted, setHasPlacementTestCompleted] = useState(false);
   const [now, setNow] = useState(() => Date.now());

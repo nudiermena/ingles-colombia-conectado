@@ -28,7 +28,7 @@ const HeroSection = () => {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="hero" size="lg" className="group" asChild>
-                <Link to="/signup">
+                <Link to="/login">
                   <Play className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
                   Comenzar mi Aventura
                 </Link>

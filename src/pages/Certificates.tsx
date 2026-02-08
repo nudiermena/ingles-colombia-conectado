@@ -328,11 +328,7 @@ const Certificates = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold">Reconocimiento Oficial</h3>
                 <p className="text-sm">Nuestros certificados están alineados con el Marco Común Europeo de Referencia (MCER)</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold">Válidos Académicamente</h3>
-                <p className="text-sm">Incluye en tu perfil académico y profesional para demostrar tu nivel de inglés</p>
-              </div>
+              </div>            
             </div>
             <p className="text-sm text-white/80">
               Tu profesor o administrador debe asignarte lecciones para cada nivel. Solo podrás descargar el certificado al completar todas las lecciones asignadas.

@@ -3,10 +3,10 @@
  * Uses getEnhancedLessonsData() so lessons get extra exercises, reading, and listening when available.
  * If a lesson already exists (same tenant_id + title), it is UPDATED with the latest content (ingest).
  *
- * Usage:
- * 1. Get your tenant ID from Admin → Organizaciones
- * 2. In browser console (logged in): await seedLessons('your-tenant-uuid')
- * 3. Or run via npm script if configured
+ * Usage (browser console, logged in):
+ * - await seedLessons()  → uses current organization (select org in app first)
+ * - await seedLessons('tenant-uuid')  → uses that tenant (you must have access)
+ * - await seedLessons('tenant-uuid', ['A1','A2'])  → optional levels
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -49,15 +49,21 @@ export const seedLessonsForTenant = async (
 
   const lessonsData = getEnhancedLessonsData();
 
-  // Verify tenant exists
+  // Verify tenant exists (use maybeSingle to avoid 406 when no row)
   const tenantResponse = await supabase
     .from('tenants' as any)
     .select('id, name')
     .eq('id', tenantId)
-    .single();
+    .maybeSingle();
 
-  if (tenantResponse.error || !tenantResponse.data) {
-    throw new Error(`Tenant not found: ${tenantResponse.error?.message || 'Unknown error'}`);
+  if (tenantResponse.error) {
+    throw new Error(`Tenant lookup failed: ${tenantResponse.error.message}`);
+  }
+  if (!tenantResponse.data) {
+    throw new Error(
+      `Tenant not found: no tenant with id ${tenantId}, or you don't have access to it (RLS). ` +
+      `Select your organization in the app and run await seedLessons() with no arguments to use that tenant.`
+    );
   }
 
   const tenant = tenantResponse.data as unknown as { id: string; name: string };
@@ -205,10 +211,21 @@ export const seedLessonsForTenant = async (
   return { success, errors, skipped, updated, inserted };
 };
 
-// Browser console helper function
+// Browser console helper: call with no args to use current organization from the app
+const STORAGE_TENANT_KEY = 'currentTenantId';
+
 if (typeof window !== 'undefined') {
-  (window as any).seedLessons = async (tenantId: string, levels?: string[]) => {
-    return await seedLessonsForTenant(tenantId, levels);
+  (window as any).seedLessons = async (tenantId?: string, levels?: string[]) => {
+    const id = tenantId?.trim() || (typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_TENANT_KEY) : null);
+    if (!id) {
+      throw new Error(
+        'Tenant ID is required. In the app, open the organization selector and choose your org, then run: await seedLessons() with no arguments. Or pass a tenant ID you have access to: await seedLessons("tenant-uuid").'
+      );
+    }
+    if (!tenantId?.trim() && typeof localStorage !== 'undefined') {
+      console.log(`Using current organization from app: ${id}`);
+    }
+    return await seedLessonsForTenant(id, levels);
   };
 }
 

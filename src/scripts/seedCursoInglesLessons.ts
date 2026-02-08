@@ -40,15 +40,18 @@ export const seedCursoInglesLessonsForTenant = async (
 
   console.log(`Starting to seed curso-ingles.com lessons for tenant: ${tenantId}`);
   
-  // Verify tenant exists
+  // Verify tenant exists (use maybeSingle to avoid 406 when no row)
   const tenantResponse = await supabase
     .from('tenants' as any)
     .select('id, name')
     .eq('id', tenantId)
-    .single();
+    .maybeSingle();
   
-  if (tenantResponse.error || !tenantResponse.data) {
-    throw new Error(`Tenant not found: ${tenantResponse.error?.message || 'Unknown error'}`);
+  if (tenantResponse.error) {
+    throw new Error(`Tenant lookup failed: ${tenantResponse.error.message}`);
+  }
+  if (!tenantResponse.data) {
+    throw new Error(`Tenant not found: no tenant with id ${tenantId}. Create the tenant first or use an existing tenant id.`);
   }
   
   const tenant = tenantResponse.data as unknown as { id: string; name: string };

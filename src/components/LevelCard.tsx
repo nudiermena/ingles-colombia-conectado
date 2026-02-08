@@ -92,7 +92,7 @@ const LevelCard = ({
           asChild={!isLocked}
         >
           {!isLocked ? (
-            <Link to={`/nivel/${level.toLowerCase()}`}>
+            <Link to={`/login?redirect=${encodeURIComponent(`/nivel/${level.toLowerCase()}`)}`}>
               {progress > 0 ? "Continuar" : "Comenzar"}
             </Link>
           ) : (

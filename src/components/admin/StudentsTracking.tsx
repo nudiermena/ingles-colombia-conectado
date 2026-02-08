@@ -366,10 +366,23 @@ const StudentsTracking = ({ currentTenant }: StudentsTrackingProps) => {
 
       <Card className="lg:col-span-2">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Seguimiento
-          </CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Seguimiento
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="icon"
+              title="Actualizar seguimiento"
+              onClick={() => {
+                fetchStudents();
+                if (selectedStudentId) fetchStudentDetail(selectedStudentId);
+              }}
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
           <CardDescription>
             {selectedStudent
               ? `Progreso de ${selectedStudent.full_name} en las lecciones asignadas`

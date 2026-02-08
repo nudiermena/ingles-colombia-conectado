@@ -17,6 +17,7 @@ import LevelA2 from "./pages/LevelA2";
 import LevelB1 from "./pages/LevelB1";
 import LessonDetail from "./pages/LessonDetail";
 import ForgotPassword from "./pages/ForgotPassword";
+import ChangePassword from "./pages/ChangePassword";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import HelpCenter from "./pages/HelpCenter";
@@ -61,6 +62,7 @@ const App = () => (
             <Route path="/nivel/b1" element={<LevelB1 />} />
             <Route path="/leccion/:id" element={<LessonDetail />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/cambiar-contrasena" element={<ChangePassword />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/ayuda" element={<HelpCenter />} />

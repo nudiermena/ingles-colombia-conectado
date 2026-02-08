@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { BookOpen, User, Menu, Shield, LogOut, Settings, TrendingUp } from "lucide-react";
+import { BookOpen, User, Menu, Shield, LogOut, Settings, TrendingUp, KeyRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
@@ -95,6 +95,12 @@ const Header = () => {
                     Cambiar Organización
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/cambiar-contrasena" className="cursor-pointer">
+                    <KeyRound className="w-4 h-4 mr-2" />
+                    Cambiar contraseña
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
@@ -104,11 +110,11 @@ const Header = () => {
             </DropdownMenu>
           ) : (
             <>
-              <Button variant="ghost" size="sm" className="hidden md:flex" asChild>
+              {/* <Button variant="ghost" size="sm" className="hidden md:flex" asChild>
                 <Link to="/login">Iniciar Sesión</Link>
-              </Button>
+              </Button> */}
               <Button variant="hero" size="sm" asChild>
-                <Link to="/signup">Comenzar Gratis</Link>
+                <Link to="/login">Comenzar Gratis</Link>
               </Button>
             </>
           )}

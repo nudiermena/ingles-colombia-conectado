@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,13 +20,21 @@ const Login = () => {
   const { currentTenant, getRoleInTenant, loading: tenantLoading } = useTenant(user?.id);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect");
 
   useEffect(() => {
     // Wait for auth and tenant data to load
     if (authLoading || tenantLoading) return;
 
     if (user && currentTenant) {
-      // Redirect based on role
+      // If user came from a level card (e.g. /nivel/a1), send them to lessons with that level filter
+      if (redirectTo && /^\/nivel\/[aAbB]1$/.test(redirectTo)) {
+        const level = redirectTo.split("/").pop()?.toUpperCase() || "A1";
+        navigate(`/lecciones?level=${level}`, { replace: true });
+        return;
+      }
+      // Otherwise redirect based on role
       const role = getRoleInTenant(currentTenant.id);
       if (role === 'admin' || role === 'teacher') {
         navigate('/admin', { replace: true });
@@ -36,11 +44,9 @@ const Login = () => {
         navigate('/tenant-select', { replace: true });
       }
     } else if (user) {
-      // User logged in but no tenant selected - redirect to tenant-select
-      // TenantSelect will auto-select if there's only one tenant
       navigate('/tenant-select', { replace: true });
     }
-  }, [user, currentTenant, authLoading, tenantLoading, navigate, getRoleInTenant]);
+  }, [user, currentTenant, authLoading, tenantLoading, navigate, getRoleInTenant, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,12 +198,12 @@ const Login = () => {
             </div> */}
 
             {/* Sign Up Link */}
-            <div className="text-center text-sm">
+            {/* <div className="text-center text-sm">
               <span className="text-muted-foreground">¿No tienes cuenta? </span>
               <Link to="/signup" className="text-primary hover:underline font-medium">
                 Regístrate gratis
               </Link>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 

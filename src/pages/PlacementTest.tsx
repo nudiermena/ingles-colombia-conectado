@@ -99,7 +99,7 @@ const PlacementTest = () => {
   };
 
   const handleStartLevel = () => {
-    navigate(`/nivel/${recommendedLevel.toLowerCase()}`);
+    navigate(`/lecciones?level=${recommendedLevel}`, { replace: true });
   };
 
   const handleRetake = () => {
@@ -217,9 +217,13 @@ const PlacementTest = () => {
                     )}
                   </div>
 
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 p-4 text-sm text-amber-900 dark:text-amber-100">
+                    Tienes que esperar que tu profesor te habilite este módulo para que puedas comenzar con el aprendizaje. Cuando te asigne lecciones del nivel {recommendedLevel}, podrás verlas en Mis Lecciones.
+                  </div>
+
                   <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <Button onClick={handleStartLevel} size="lg" className="group">
-                      Comenzar Nivel {recommendedLevel}
+                      Ir a Nivel {recommendedLevel}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
                     <p className="text-sm text-muted-foreground self-center">

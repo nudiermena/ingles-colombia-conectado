@@ -1,20 +1,28 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Play, Pause, Volume2, RotateCcw, CheckCircle2, X } from "lucide-react";
+import { useTextToSpeech } from "@/hooks/useTextToSpeech";
+import { Play, Pause, Volume2, RotateCcw, CheckCircle2, X, Loader2, Mic, Square } from "lucide-react";
 
 const Demo = () => {
+  const { speak, stop, isSpeaking, isPreparingSpeak } = useTextToSpeech();
   const [currentStep, setCurrentStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [fillAnswer, setFillAnswer] = useState("");
   const [readingAnswer, setReadingAnswer] = useState<number | null>(null);
-  const [listeningPlaying, setListeningPlaying] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedUrl, setRecordedUrl] = useState<string | null>(null);
+  const [isPlayingBack, setIsPlayingBack] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const playbackAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const demoSteps = [
     {
@@ -50,7 +58,10 @@ const Demo = () => {
       title: "Comprensión Auditiva",
       type: "listening",
       text: "The weather is nice today. It is sunny and warm.",
-      tip: "Escucha el audio y practica la comprensión."
+      tip: "Escucha el audio y responde la pregunta.",
+      question: "¿Cómo está el clima en el audio?",
+      options: ["Rainy and cold", "Sunny and warm", "Windy and cloudy", "Snowy"],
+      correct: 1
     },
     {
       title: "Pronunciación",
@@ -80,27 +91,91 @@ const Demo = () => {
     setShowResult(true);
   };
 
+  const handleFillSubmit = () => {
+    const d = demoSteps[currentStep];
+    if (d.type !== "fill" || !("answer" in d)) return;
+    const correct = fillAnswer.trim().toLowerCase() === (d.answer as string).toLowerCase();
+    setShowResult(true);
+    if (!correct) setFillAnswer("");
+  };
+
   const nextStep = () => {
     if (currentStep < demoSteps.length - 1) {
+      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
       setCurrentStep(currentStep + 1);
       setSelectedAnswer(null);
       setShowResult(false);
       setFillAnswer("");
       setReadingAnswer(null);
+      setRecordedUrl(null);
+      setIsRecording(false);
     }
   };
 
   const resetDemo = () => {
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     setCurrentStep(0);
     setSelectedAnswer(null);
     setShowResult(false);
     setFillAnswer("");
     setReadingAnswer(null);
+    setRecordedUrl(null);
+    setIsRecording(false);
   };
+
+  const startRecording = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      chunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size) chunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunksRef.current, { type: mime });
+        const url = URL.createObjectURL(blob);
+        setRecordedUrl((prev) => {
+          if (prev) URL.revokeObjectURL(prev);
+          return url;
+        });
+      };
+      recorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Microphone error:", err);
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  }, []);
+
+  const playRecorded = useCallback(() => {
+    if (!recordedUrl) return;
+    if (playbackAudioRef.current) {
+      playbackAudioRef.current.pause();
+      playbackAudioRef.current = null;
+    }
+    const audio = new Audio(recordedUrl);
+    playbackAudioRef.current = audio;
+    audio.onplay = () => setIsPlayingBack(true);
+    audio.onended = () => {
+      setIsPlayingBack(false);
+      playbackAudioRef.current = null;
+    };
+    audio.play();
+  }, [recordedUrl]);
 
   const canAdvance = () => {
     const d = demoSteps[currentStep];
     if (d.type === "quiz" || (d.type === "reading" && "correct" in d)) return showResult || selectedAnswer !== null;
+    if (d.type === "listening" && "correct" in d) return showResult || selectedAnswer !== null;
     if (d.type === "fill") return showResult;
     return true;
   };
@@ -160,19 +235,19 @@ const Demo = () => {
                     <h2 className="text-4xl font-bold text-primary">{currentDemo.content}</h2>
                     <p className="text-xl text-muted-foreground">{currentDemo.translation}</p>
                   </div>
-                  
                   <div className="flex justify-center gap-4">
-                    <Button 
-                      variant={isPlaying ? "outline" : "success"}
+                    <Button
+                      variant={isSpeaking ? "outline" : "success"}
                       size="lg"
-                      onClick={() => setIsPlaying(!isPlaying)}
+                      onClick={() => (isSpeaking ? stop() : speak(currentDemo.content as string, { lang: "en-US" }))}
+                      disabled={isPreparingSpeak}
                     >
-                      {isPlaying ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
-                      {isPlaying ? "Pausar" : "Reproducir"}
+                      {isPreparingSpeak ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : isSpeaking ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                      {isPreparingSpeak ? "Preparando…" : isSpeaking ? "Pausar" : "Reproducir"}
                     </Button>
-                    <Button variant="outline" size="lg">
+                    <Button variant="outline" size="lg" onClick={() => stop()}>
                       <Volume2 className="w-5 h-5 mr-2" />
-                      Audio Lento
+                      Detener
                     </Button>
                   </div>
                 </div>
@@ -227,6 +302,153 @@ const Demo = () => {
                 </div>
               )}
 
+              {/* Fill-in-the-blank Demo */}
+              {currentDemo.type === 'fill' && (
+                <div className="space-y-6">
+                  <h2 className="text-xl font-semibold text-center">{(currentDemo as { question: string }).question}</h2>
+                  <p className="text-sm text-muted-foreground text-center">{(currentDemo as { hint?: string }).hint}</p>
+                  <div className="space-y-2">
+                    <Label htmlFor="demo-fill">Tu respuesta</Label>
+                    <Input
+                      id="demo-fill"
+                      type="text"
+                      placeholder="Escribe la palabra que falta"
+                      value={fillAnswer}
+                      onChange={(e) => setFillAnswer(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleFillSubmit()}
+                      disabled={showResult}
+                      className="text-center text-lg"
+                    />
+                  </div>
+                  {!showResult ? (
+                    <Button className="w-full" onClick={handleFillSubmit} disabled={!fillAnswer.trim()}>
+                      Completar
+                    </Button>
+                  ) : (
+                    <div className={`p-4 rounded-lg border ${
+                      fillAnswer.trim().toLowerCase() === ((currentDemo as { answer: string }).answer).toLowerCase()
+                        ? "bg-success/10 border-success/20 text-success"
+                        : "bg-destructive/10 border-destructive/20 text-destructive"
+                    }`}>
+                      {fillAnswer.trim().toLowerCase() === ((currentDemo as { answer: string }).answer).toLowerCase()
+                        ? "¡Correcto! Excelente trabajo."
+                        : `Incorrecto. La respuesta correcta es "${(currentDemo as { answer: string }).answer}".`}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reading comprehension Demo */}
+              {currentDemo.type === 'reading' && (
+                <div className="space-y-6">
+                  <p className="text-muted-foreground whitespace-pre-wrap">{(currentDemo as { passage: string }).passage}</p>
+                  <h2 className="text-xl font-semibold text-center">{(currentDemo as { question: string }).question}</h2>
+                  <div className="grid gap-3">
+                    {((currentDemo as { options?: string[] }).options ?? []).map((option, index) => (
+                      <Button
+                        key={index}
+                        variant={
+                          showResult
+                            ? index === (currentDemo as { correct: number }).correct
+                              ? "success"
+                              : selectedAnswer === index
+                                ? "destructive"
+                                : "outline"
+                            : selectedAnswer === index
+                              ? "default"
+                              : "outline"
+                        }
+                        className="justify-start h-auto p-4 text-left"
+                        onClick={() => !showResult && handleAnswerSelect(index)}
+                        disabled={showResult}
+                      >
+                        <span className="flex-1">{option}</span>
+                        {showResult && index === (currentDemo as { correct: number }).correct && (
+                          <CheckCircle2 className="w-5 h-5 text-success-foreground ml-2" />
+                        )}
+                      </Button>
+                    ))}
+                  </div>
+                  {showResult && (
+                    <div className={`p-4 rounded-lg border ${
+                      selectedAnswer === (currentDemo as { correct: number }).correct
+                        ? "bg-success/10 border-success/20 text-success"
+                        : "bg-destructive/10 border-destructive/20 text-destructive"
+                    }`}>
+                      {selectedAnswer === (currentDemo as { correct: number }).correct
+                        ? "¡Correcto!"
+                        : "Incorrecto. La respuesta correcta es Colombia."}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Listening Demo */}
+              {currentDemo.type === 'listening' && (
+                <div className="space-y-6">
+                  <p className="text-muted-foreground text-center">{(currentDemo as { tip: string }).tip}</p>
+                  <div className="flex flex-wrap justify-center gap-4">
+                    <Button
+                      variant="success"
+                      size="lg"
+                      onClick={() => speak((currentDemo as { text: string }).text, { lang: "en-US" })}
+                      disabled={isPreparingSpeak || isSpeaking}
+                    >
+                      {isPreparingSpeak ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Play className="w-5 h-5 mr-2" />}
+                      {isPreparingSpeak ? "Preparando…" : isSpeaking ? "Reproduciendo…" : "Reproducir audio"}
+                    </Button>
+                    <Button variant="outline" size="lg" onClick={() => stop()}>
+                      Detener
+                    </Button>
+                  </div>
+                  <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                    <strong className="text-foreground">Contenido del audio:</strong> {(currentDemo as { text: string }).text}
+                  </div>
+                  {"question" in currentDemo && (currentDemo as { question: string }).question && (
+                    <>
+                      <h2 className="text-xl font-semibold text-center">{(currentDemo as { question: string }).question}</h2>
+                      <div className="grid gap-3">
+                        {((currentDemo as { options?: string[] }).options ?? []).map((option, index) => (
+                          <Button
+                            key={index}
+                            variant={
+                              showResult
+                                ? index === (currentDemo as { correct: number }).correct
+                                  ? "success"
+                                  : selectedAnswer === index
+                                    ? "destructive"
+                                    : "outline"
+                                : selectedAnswer === index
+                                  ? "default"
+                                  : "outline"
+                            }
+                            className="justify-start h-auto p-4 text-left"
+                            onClick={() => !showResult && handleAnswerSelect(index)}
+                            disabled={showResult}
+                          >
+                            <span className="flex-1">{option}</span>
+                            {showResult && index === (currentDemo as { correct: number }).correct && (
+                              <CheckCircle2 className="w-5 h-5 text-success-foreground ml-2" />
+                            )}
+                          </Button>
+                        ))}
+                      </div>
+                      {showResult && (
+                        <div className={`p-4 rounded-lg border ${
+                          selectedAnswer === (currentDemo as { correct: number }).correct
+                            ? "bg-success/10 border-success/20 text-success"
+                            : "bg-destructive/10 border-destructive/20 text-destructive"
+                        }`}>
+                          {selectedAnswer === (currentDemo as { correct: number }).correct
+                            ? "¡Correcto!"
+                            : `Incorrecto. La respuesta correcta es "${((currentDemo as { options?: string[] }).options ?? [])[(currentDemo as { correct: number }).correct]}".`}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* Pronunciation Demo */}
               {currentDemo.type === 'pronunciation' && (
                 <div className="text-center space-y-6">
@@ -237,16 +459,39 @@ const Demo = () => {
                       💡 {currentDemo.tip}
                     </p>
                   </div>
-                  
-                  <div className="flex justify-center gap-4">
-                    <Button variant="success" size="lg">
-                      <Play className="w-5 h-5 mr-2" />
-                      Escuchar Modelo
+                  <div className="flex flex-wrap justify-center gap-4">
+                    <Button
+                      variant="success"
+                      size="lg"
+                      onClick={() => (isSpeaking ? stop() : speak(currentDemo.content as string, { lang: "en-US" }))}
+                      disabled={isPreparingSpeak}
+                    >
+                      {isPreparingSpeak ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Play className="w-5 h-5 mr-2" />}
+                      {isPreparingSpeak ? "Preparando…" : "Escuchar Modelo"}
                     </Button>
-                    <Button variant="outline" size="lg">
-                      <Volume2 className="w-5 h-5 mr-2" />
-                      Grabar mi Voz
-                    </Button>
+                    {!isRecording && !recordedUrl && (
+                      <Button variant="outline" size="lg" onClick={startRecording}>
+                        <Mic className="w-5 h-5 mr-2" />
+                        Grabar mi Voz
+                      </Button>
+                    )}
+                    {isRecording && (
+                      <Button variant="destructive" size="lg" onClick={stopRecording}>
+                        <Square className="w-5 h-5 mr-2" />
+                        Detener grabación
+                      </Button>
+                    )}
+                    {recordedUrl && !isRecording && (
+                      <>
+                        <Button variant="outline" size="lg" onClick={playRecorded} disabled={isPlayingBack}>
+                          {isPlayingBack ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <Play className="w-5 h-5 mr-2" />}
+                          {isPlayingBack ? "Reproduciendo…" : "Escuchar mi grabación"}
+                        </Button>
+                        <Button variant="ghost" size="lg" onClick={() => { if (recordedUrl) URL.revokeObjectURL(recordedUrl); setRecordedUrl(null); }}>
+                          Volver a grabar
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
@@ -268,7 +513,7 @@ const Demo = () => {
                   </Button>
                 ) : (
                   <Button variant="success" asChild>
-                    <Link to="/signup">
+                    <Link to="/login">
                       ¡Comenzar Gratis!
                     </Link>
                   </Button>
