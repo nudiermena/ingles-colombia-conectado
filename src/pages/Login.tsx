@@ -56,11 +56,15 @@ const Login = () => {
       const { error } = await signIn(email, password);
 
       if (error) {
+        const message =
+          error.message === "Invalid login credentials"
+            ? "Correo o contraseña incorrectos. Verifica e intenta de nuevo."
+            : error.message === "Email not confirmed"
+              ? "Confirma tu correo con el enlace que te enviamos antes de iniciar sesión."
+              : error.message ?? "Error al conectar con el servidor. Revisa tu conexión y la configuración del proyecto.";
         toast({
           title: "Error al iniciar sesión",
-          description: error.message === "Invalid login credentials"
-            ? "Correo o contraseña incorrectos"
-            : error.message,
+          description: message,
           variant: "destructive"
         });
       }
