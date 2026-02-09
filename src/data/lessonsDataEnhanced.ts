@@ -33,16 +33,11 @@ export type ContentEnhancement = {
 
 const enhancements: Record<string, ContentEnhancement> = {
   'Saludos y Despedidas::A1': {
+    // Only extra exercises not already in base lesson (base has MC/fill for Mucho gusto, How are you, name, later + pronunciation Hello/Goodbye)
     exercises: [
-      { type: 'multiple-choice', question: "¿Cómo dices 'Mucho gusto' en inglés?", options: ['Nice to meet you', 'How are you?', 'Good morning', 'See you later'], correct: 0 },
-      { type: 'fill-blank', question: "Complete: 'My _____ is María'", answer: 'name' },
-      { type: 'multiple-choice', question: "¿Qué respondes a 'How are you?'", options: ["I'm fine, thank you", 'My name is', 'Goodbye', 'Hello'], correct: 0 },
-      { type: 'fill-blank', question: "Complete: 'See you _____' (después)", answer: 'later' },
       { type: 'multiple-choice', question: "What is 'Good morning' in Spanish?", options: ['Buenas noches', 'Buenos días', 'Buenas tardes', 'Adiós'], correct: 1 },
       { type: 'fill-blank', question: "Complete: 'Nice to _____ you'", answer: 'meet' },
       { type: 'multiple-choice', question: "Which is informal: 'Hi' or 'Hello'?", options: ['Hello', 'Hi', 'Both', 'Neither'], correct: 1 },
-      { type: 'pronunciation', word: 'Hello', pronunciation: '/həˈloʊ/' },
-      { type: 'pronunciation', word: 'Goodbye', pronunciation: '/ɡʊdˈbaɪ/' },
     ],
     reading: [
       {

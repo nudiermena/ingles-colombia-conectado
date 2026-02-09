@@ -39,9 +39,10 @@ import type { Tenant } from "@/hooks/useTenant";
 
 interface LessonsManagementProps {
   currentTenant: Tenant | null;
+  currentUserRole?: 'admin' | 'teacher' | 'student' | null;
 }
 
-const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
+const LessonsManagement = ({ currentTenant, currentUserRole }: LessonsManagementProps) => {
   const { toast } = useToast();
   const { lessons, loading: lessonsLoading, createLesson, updateLesson, deleteLesson, fetchLessons } = useLessons(currentTenant?.id || null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -939,14 +940,17 @@ const LessonsManagement = ({ currentTenant }: LessonsManagementProps) => {
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(lesson.id)}
-                        disabled={isLoading || isReordering}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                      {currentUserRole === 'admin' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(lesson.id)}
+                          disabled={isLoading || isReordering}
+                          title="Eliminar lección (solo administrador)"
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

@@ -1,3 +1,8 @@
+/**
+ * Pronunciation practice: listen to model (TTS), record, validate with Web Speech API.
+ * Speech Recognition + Speech Synthesis. Best in Chrome/Edge.
+ * @see https://webapis.co/web-speech
+ */
 import { useMemo, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -158,7 +163,7 @@ export const PronunciationRecorder = ({
     try {
       const recognition = new SpeechRecognitionCtor();
       recognition.lang = lang;
-      recognition.continuous = true;
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.maxAlternatives = 5;
 
@@ -234,7 +239,8 @@ export const PronunciationRecorder = ({
   }, [lang, normalizedWord, transcriptMatches]);
 
   const handleMarkComplete = useCallback(() => {
-    if (pronunciationStatus !== 'ok' && !skippedValidation) {
+    const canProceed = pronunciationStatus === 'ok' || skippedValidation;
+    if (!canProceed) {
       setErrorText('Debes validar tu pronunciación o usar "Continuar sin validación" para continuar.');
       return;
     }
@@ -242,6 +248,8 @@ export const PronunciationRecorder = ({
     onComplete?.();
     setIsSaving(false);
   }, [onComplete, pronunciationStatus, skippedValidation]);
+
+  const canContinue = pronunciationStatus === 'ok' || skippedValidation;
 
   return (
     <div className="text-center space-y-4">
@@ -252,6 +260,9 @@ export const PronunciationRecorder = ({
           <p className="text-muted-foreground">{pronunciation}</p>
         )}
       </div>
+      <p className="text-xs text-muted-foreground">
+        Para la mejor experiencia usa Chrome o Edge. La validación usa la Web Speech API (reconocimiento de voz).
+      </p>
 
       {/* Reference: listen to model pronunciation */}
       <Card>
@@ -366,11 +377,23 @@ export const PronunciationRecorder = ({
             )}
 
             {pronunciationStatus === 'unsupported' && (
-              <div className="p-3 rounded-lg bg-warning/10 text-warning text-sm">
+              <div className="p-3 rounded-lg bg-warning/10 text-warning text-sm space-y-2">
                 <p className="font-medium">Validación no disponible en este navegador</p>
-                <p className="text-xs mt-1">
-                  Prueba con Chrome/Edge. Mientras tanto, no podrás avanzar en este ejercicio sin validación.
+                <p className="text-xs">
+                  La Web Speech API (reconocimiento de voz) funciona mejor en Chrome o Edge. Puedes practicar escuchando el modelo y grabando tu voz, y continuar sin validación automática.
                 </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSkippedValidation(true);
+                    setErrorText('');
+                  }}
+                  className="mt-2"
+                >
+                  Continuar sin validación automática
+                </Button>
               </div>
             )}
           </div>
@@ -384,12 +407,12 @@ export const PronunciationRecorder = ({
         </div>
       )}
 
-      {!isCompleted && recordedBlob && (
+      {!isCompleted && (recordedBlob || canContinue) && (
         <Button
           variant="lesson"
           size="lg"
           onClick={handleMarkComplete}
-          disabled={isSaving || (pronunciationStatus !== 'ok' && !skippedValidation)}
+          disabled={isSaving || !canContinue}
         >
           {isSaving ? <Loader2 className="w-5 h-5 mr-2 animate-spin" /> : <CheckCircle className="w-5 h-5 mr-2" />}
           Marcar como completado y continuar

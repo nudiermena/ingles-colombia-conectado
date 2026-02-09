@@ -214,12 +214,16 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
         return;
       }
 
-      // Teacher/non-admin: only users in current tenant
-      const { data: rolesData, error: rolesError } = await supabase
+      // Teacher/non-admin: only users in current tenant; teachers see only students
+      let query = supabase
         .from('user_roles')
         .select('*')
         .eq('tenant_id', currentTenant.id)
         .order('created_at', { ascending: false });
+      if (currentUserRole === 'teacher') {
+        query = query.eq('role', 'student');
+      }
+      const { data: rolesData, error: rolesError } = await query;
 
       if (rolesError) throw rolesError;
 
@@ -441,9 +445,12 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
     e.preventDefault();
     if (!currentTenant) return;
 
-    const role = formData.role && ['admin', 'teacher', 'student'].includes(formData.role)
-      ? formData.role
-      : 'student';
+    const role =
+      currentUserRole === 'teacher'
+        ? 'student'
+        : formData.role && ['admin', 'teacher', 'student'].includes(formData.role)
+          ? formData.role
+          : 'student';
 
     setIsSubmitting(true);
     try {
@@ -454,22 +461,24 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           .eq("user_id", editingUser.id)
           .select();
 
-        const roleInCurrentTenant = editingUser.organizations?.find(o => o.tenant_id === currentTenant.id);
-        if (roleInCurrentTenant?.role_id) {
-          await supabase
-            .from("user_roles")
-            .update({ role })
-            .eq("id", roleInCurrentTenant.role_id);
-        } else {
-          await (supabase as any).rpc("add_user_role_to_tenant", {
-            _user_id: editingUser.id,
-            _tenant_id: currentTenant.id,
-            _role: role,
-          });
+        if (currentUserRole === 'admin') {
+          const roleInCurrentTenant = editingUser.organizations?.find(o => o.tenant_id === currentTenant.id);
+          if (roleInCurrentTenant?.role_id) {
+            await supabase
+              .from("user_roles")
+              .update({ role })
+              .eq("id", roleInCurrentTenant.role_id);
+          } else {
+            await (supabase as any).rpc("add_user_role_to_tenant", {
+              _user_id: editingUser.id,
+              _tenant_id: currentTenant.id,
+              _role: role,
+            });
+          }
         }
         toast({
           title: "Usuario actualizado",
-          description: "El usuario ha sido actualizado exitosamente",
+          description: currentUserRole === 'teacher' ? "Nombre actualizado correctamente" : "El usuario ha sido actualizado exitosamente",
         });
       } else {
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -677,10 +686,11 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           { onConflict: "user_id" }
         );
         const addRoleWithRetry = async (attempt = 0): Promise<void> => {
+          const roleToAssign = currentUserRole === 'teacher' ? 'student' : row.role;
           const { error: roleError } = await (supabase as any).rpc("add_user_role_to_tenant", {
             _user_id: userId,
             _tenant_id: currentTenant.id,
-            _role: row.role,
+            _role: roleToAssign,
           });
           if (roleError) {
             const isConflict = roleError.code === "409" || roleError.status === 409;
@@ -856,6 +866,8 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
             <CardDescription>
               {isAdminView
                 ? "Todos los usuarios del sistema. Agrega, quita o edita usuarios en cualquier organización."
+                : currentUserRole === 'teacher'
+                ? `Estudiantes de ${currentTenant?.name || "la organización"}. Solo puedes ver y gestionar estudiantes.`
                 : `Administra los usuarios de ${currentTenant?.name || "la organización"}`}
             </CardDescription>
           </div>
@@ -895,8 +907,12 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                   </DialogTitle>
                   <DialogDescription>
                     {isEditing
-                      ? "Actualiza el nombre y rol del usuario"
-                      : "Crea un usuario con correo y contraseña y asígnalo a la organización"}
+                      ? currentUserRole === 'teacher'
+                        ? "Actualiza el nombre del estudiante"
+                        : "Actualiza el nombre y rol del usuario"
+                      : currentUserRole === 'teacher'
+                        ? "Crea un estudiante con correo y contraseña y asígnalo a la organización"
+                        : "Crea un usuario con correo y contraseña y asígnalo a la organización"}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
@@ -944,29 +960,26 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Rol</Label>
-                      <Select
-                        value={formData.role}
-                        onValueChange={(value: "admin" | "teacher" | "student") =>
-                          setFormData({ ...formData, role: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {(currentUserRole === "admin" || currentUserRole === "teacher") && (
-                            <>
+                    {currentUserRole === "admin" && (
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Rol</Label>
+                        <Select
+                          value={formData.role}
+                          onValueChange={(value: "admin" | "teacher" | "student") =>
+                            setFormData({ ...formData, role: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
                             <SelectItem value="admin">Administrador</SelectItem>
                             <SelectItem value="teacher">Profesor</SelectItem>
                             <SelectItem value="student">Estudiante</SelectItem>
-                            </>
-                          )}
-                        
-                        </SelectContent>
-                      </Select>
-                    </div>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button
@@ -1135,7 +1148,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        {!isAdminView && (
+                        {!isAdminView && currentUserRole === 'admin' && (
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1145,7 +1158,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                               user.id === currentUser?.id ||
                               (user.role === "admin" && currentUserRole !== "admin")
                             }
-                            title="Eliminar de la organización"
+                            title="Eliminar de la organización (solo administrador)"
                           >
                             <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>

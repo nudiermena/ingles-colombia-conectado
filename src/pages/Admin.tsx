@@ -131,26 +131,26 @@ const Admin = () => {
               <span className="hidden sm:inline">Seguimiento</span>
               <span className="sm:hidden">Seg</span>
             </TabsTrigger>
-            <TabsTrigger value="courses" className="flex items-center gap-2">
+            {/* <TabsTrigger value="courses" className="flex items-center gap-2">
               <GraduationCap className="w-4 h-4" />
               <span className="hidden sm:inline">Cursos</span>
               <span className="sm:hidden">Cur</span>
-            </TabsTrigger>
-            <TabsTrigger value="units" className="flex items-center gap-2">
+            </TabsTrigger> */}
+            {/* <TabsTrigger value="units" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               <span className="hidden sm:inline">Unidades</span>
               <span className="sm:hidden">Uni</span>
-            </TabsTrigger>
-            <TabsTrigger value="unit-content" className="flex items-center gap-2">
+            </TabsTrigger> */}
+            {/* <TabsTrigger value="unit-content" className="flex items-center gap-2">
               <List className="w-4 h-4" />
               <span className="hidden sm:inline">Contenido</span>
               <span className="sm:hidden">Con</span>
-            </TabsTrigger>
-            <TabsTrigger value="resources" className="flex items-center gap-2">
+            </TabsTrigger> */}
+            {/* <TabsTrigger value="resources" className="flex items-center gap-2">
               <Video className="w-4 h-4" />
               <span className="hidden sm:inline">Recursos</span>
               <span className="sm:hidden">Rec</span>
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="lessons" className="flex items-center gap-2">
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Lecciones</span>
@@ -215,7 +215,7 @@ const Admin = () => {
           </TabsContent>
 
           <TabsContent value="lessons" className="space-y-4">
-            <LessonsManagement currentTenant={currentTenant} />
+            <LessonsManagement currentTenant={currentTenant} currentUserRole={role} />
           </TabsContent>
 
           {role === 'admin' && (

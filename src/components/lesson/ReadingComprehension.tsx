@@ -26,12 +26,31 @@ export const ReadingComprehension = ({
   title = 'Reading Comprehension',
   questions,
   onComplete,
-  showAnswers: initialShowAnswers = false
+  showAnswers: initialShowAnswers = false,
+  lang = 'en-US',
 }: ReadingComprehensionProps) => {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [showAnswers, setShowAnswers] = useState(initialShowAnswers);
   const [isCompleted, setIsCompleted] = useState(false);
   const [showPassage, setShowPassage] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const speakPassage = useCallback(() => {
+    if (!passage?.trim() || !('speechSynthesis' in window)) return;
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(passage.trim());
+    utterance.lang = lang;
+    utterance.rate = 0.9;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  }, [passage, lang, isSpeaking]);
 
   const handleAnswer = (questionIndex: number, answerIndex: number) => {
     if (isCompleted) return;

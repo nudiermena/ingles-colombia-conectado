@@ -419,7 +419,7 @@ const ExerciseComponent = ({
         lang="en-US"
         isCompleted={isCompleted}
         onComplete={onComplete}
-        onSpeakReference={speak}
+        onSpeakReference={(text, lang) => speak(text, { lang: lang || 'en-US' })}
         onStopReference={stop}
         isSpeakingReference={isSpeaking}
         isPreparingReference={isPreparingSpeak}
@@ -499,6 +499,8 @@ const LessonDetail = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedExercises, setCompletedExercises] = useState<number[]>([]);
   const [correctExercises, setCorrectExercises] = useState<number[]>([]);
+  /** For listening steps: step index -> { questionIndex -> selectedOptionIndex } */
+  const [listeningSelections, setListeningSelections] = useState<Record<number, Record<number, number>>>({});
   const [startTime] = useState(Date.now());
   const [timeSpent, setTimeSpent] = useState(0);
   const [now, setNow] = useState(() => Date.now());
@@ -1081,32 +1083,49 @@ const LessonDetail = () => {
                         Marcar como escuchado y continuar
                       </Button>
                     )}
-                    {listeningData.questions && listeningData.questions.length > 0 && (
-                      <div className="mt-6">
-                        <h3 className="text-lg font-semibold mb-4">Preguntas de Comprensión</h3>
-                        <div className="space-y-4">
-                          {listeningData.questions.map((q: any, qIndex: number) => (
-                            <div key={qIndex} className="space-y-2">
-                              <p className="font-medium">{q.question}</p>
-                              <div className="space-y-2">
-                                {q.options?.map((option: string, oIndex: number) => (
-                                  <Button
-                                    key={oIndex}
-                                    variant="outline"
-                                    className="w-full text-left justify-start"
-                                  >
-                                    <span className="font-semibold mr-2">
-                                      {String.fromCharCode(65 + oIndex)}.
-                                    </span>
-                                    {option}
-                                  </Button>
-                                ))}
-                              </div>
-                            </div>
-                          ))}
+                    {listeningData.questions && listeningData.questions.length > 0 && (() => {
+                      const listeningStepIndex = currentStep - readingEnd;
+                      const stepSelections = listeningSelections[listeningStepIndex] ?? {};
+                      return (
+                        <div className="mt-6">
+                          <h3 className="text-lg font-semibold mb-4">Preguntas de Comprensión</h3>
+                          <div className="space-y-4">
+                            {listeningData.questions.map((q: any, qIndex: number) => {
+                              const selected = stepSelections[qIndex];
+                              return (
+                                <div key={qIndex} className="space-y-2">
+                                  <p className="font-medium">{q.question}</p>
+                                  <div className="space-y-2">
+                                    {q.options?.map((option: string, oIndex: number) => (
+                                      <Button
+                                        key={oIndex}
+                                        type="button"
+                                        variant={selected === oIndex ? 'default' : 'outline'}
+                                        className="w-full text-left justify-start"
+                                        onClick={() => {
+                                          setListeningSelections((prev) => {
+                                            const step = prev[listeningStepIndex] ?? {};
+                                            return {
+                                              ...prev,
+                                              [listeningStepIndex]: { ...step, [qIndex]: oIndex },
+                                            };
+                                          });
+                                        }}
+                                      >
+                                        <span className="font-semibold mr-2">
+                                          {String.fromCharCode(65 + oIndex)}.
+                                        </span>
+                                        {option}
+                                      </Button>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 ) : null}
               </CardContent>

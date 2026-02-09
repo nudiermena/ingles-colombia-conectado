@@ -401,9 +401,7 @@ const Demo = () => {
                       Detener
                     </Button>
                   </div>
-                  <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
-                    <strong className="text-foreground">Contenido del audio:</strong> {(currentDemo as { text: string }).text}
-                  </div>
+                  
                   {"question" in currentDemo && (currentDemo as { question: string }).question && (
                     <>
                       <h2 className="text-xl font-semibold text-center">{(currentDemo as { question: string }).question}</h2>
