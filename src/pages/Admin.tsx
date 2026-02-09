@@ -190,6 +190,7 @@ const Admin = () => {
             <UsersManagement
               currentTenant={currentTenant}
               currentUserRole={role}
+              tenants={role === 'admin' ? tenants : undefined}
             />
           </TabsContent>
 

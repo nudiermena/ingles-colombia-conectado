@@ -30,13 +30,23 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, Loader2, Trash2, Pencil, Plus, BookOpen, Upload, FileText, ClipboardCheck } from "lucide-react";
+import { Users, Search, Loader2, Trash2, Pencil, Plus, BookOpen, Upload, FileText, ClipboardCheck, Building2 } from "lucide-react";
 import type { Tenant } from "@/hooks/useTenant";
 
 interface UsersManagementProps {
   currentTenant: Tenant | null;
   currentUserRole?: 'admin' | 'teacher' | 'student' | null;
+  /** All tenants (for admin: list all users and add/remove from any org) */
+  tenants?: Tenant[];
   onInvite?: () => void;
+}
+
+/** One org membership for a user (admin view) */
+export interface UserOrgMembership {
+  tenant_id: string;
+  tenant_name: string;
+  role: 'admin' | 'teacher' | 'student';
+  role_id: string;
 }
 
 interface UserWithRole {
@@ -46,9 +56,11 @@ interface UserWithRole {
   role: 'admin' | 'teacher' | 'student' | null;
   role_id: string | null;
   created_at: string;
+  /** Only in admin mode: memberships across all orgs */
+  organizations?: UserOrgMembership[];
 }
 
-const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersManagementProps) => {
+const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvite }: UsersManagementProps) => {
   const { user: currentUser } = useAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserWithRole[]>([]);
@@ -84,19 +96,125 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
   const [placementTestAssignedIds, setPlacementTestAssignedIds] = useState<Set<string>>(new Set());
   const [isAssigningPlacementTest, setIsAssigningPlacementTest] = useState(false);
   const assignDialogUserHasChangedSelection = useRef(false);
+  const [addToOrgDialogOpen, setAddToOrgDialogOpen] = useState(false);
+  const [addToOrgUser, setAddToOrgUser] = useState<UserWithRole | null>(null);
+  const [addToOrgTenantId, setAddToOrgTenantId] = useState("");
+  const [addToOrgRole, setAddToOrgRole] = useState<"admin" | "teacher" | "student">("student");
+  const [isAddingToOrg, setIsAddingToOrg] = useState(false);
+
+  const isAdminView = currentUserRole === 'admin' && tenants.length > 0;
 
   useEffect(() => {
-    if (currentTenant) {
+    if (isAdminView || currentTenant) {
       fetchUsers();
     }
-  }, [currentTenant]);
+  }, [isAdminView, currentTenant?.id, tenants.length]);
 
   const fetchUsers = async () => {
-    if (!currentTenant) return;
-
     setIsLoading(true);
     try {
-      // Fetch all user roles in this tenant (same as Rol tab: everyone in the org)
+      if (isAdminView) {
+        // Admin: fetch ALL user_roles and all profiles to show every user and their organizations
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (rolesError) throw rolesError;
+
+        const userIds = [...new Set((rolesData || []).map(r => r.user_id))];
+        if (userIds.length === 0) {
+          setUsers([]);
+          setAssignedSummaryByUserId({});
+          setIsLoading(false);
+          return;
+        }
+
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, email, created_at')
+          .in('user_id', userIds);
+
+        if (profilesError) throw profilesError;
+
+        const profileByUserId = new Map<string, { full_name: string | null; email: string | null; created_at: string }>();
+        (profilesData || []).forEach((p: { user_id: string; full_name: string | null; email: string | null; created_at: string }) => {
+          profileByUserId.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null, created_at: p.created_at });
+        });
+
+        const tenantIds = [...new Set((rolesData || []).map(r => r.tenant_id))];
+        const tenantIdToName = new Map<string, string>();
+        if (tenantIds.length > 0 && tenants.length > 0) {
+          tenants.forEach(t => tenantIdToName.set(t.id, t.name));
+        } else if (tenantIds.length > 0) {
+          const { data: tenantsData } = await supabase.from('tenants').select('id, name').in('id', tenantIds);
+          (tenantsData || []).forEach((t: { id: string; name: string }) => tenantIdToName.set(t.id, t.name));
+        }
+
+        const usersById = new Map<string, UserWithRole>();
+        for (const roleRow of rolesData || []) {
+          const profile = profileByUserId.get(roleRow.user_id);
+          const displayEmail = profile?.email?.trim() || null;
+          const displayName = profile?.full_name?.trim() || null;
+          const existing = usersById.get(roleRow.user_id);
+          const membership: UserOrgMembership = {
+            tenant_id: roleRow.tenant_id,
+            tenant_name: tenantIdToName.get(roleRow.tenant_id) ?? roleRow.tenant_id.slice(0, 8),
+            role: (roleRow.role as 'admin' | 'teacher' | 'student') ?? 'student',
+            role_id: roleRow.id ?? '',
+          };
+          if (existing) {
+            existing.organizations = [...(existing.organizations || []), membership];
+          } else {
+            usersById.set(roleRow.user_id, {
+              id: roleRow.user_id,
+              email: displayEmail ?? roleRow.user_id.substring(0, 8) + '...',
+              full_name: displayName ?? 'Sin nombre',
+              role: roleRow.role ?? null,
+              role_id: roleRow.id ?? null,
+              created_at: profile?.created_at ?? roleRow.created_at,
+              organizations: [membership],
+            });
+          }
+        }
+
+        const usersWithRoles = Array.from(usersById.values());
+        setUsers(usersWithRoles);
+
+        const tenantIdForAssignments = currentTenant?.id ?? usersWithRoles[0]?.organizations?.[0]?.tenant_id;
+        if (tenantIdForAssignments) {
+          const { data: assignmentsData, error: assignmentsError } = await (supabase as any)
+            .from('user_lesson_assignments')
+            .select('user_id, lesson_id, lessons(level)')
+            .eq('tenant_id', tenantIdForAssignments)
+            .in('user_id', userIds);
+          if (!assignmentsError && assignmentsData) {
+            const summary: Record<string, { total: number; byLevel: Record<string, number> }> = {};
+            (assignmentsData || []).forEach((row: any) => {
+              const uid = row.user_id as string;
+              const level = row.lessons?.level as string | undefined;
+              if (!summary[uid]) summary[uid] = { total: 0, byLevel: {} };
+              summary[uid].total += 1;
+              if (level) summary[uid].byLevel[level] = (summary[uid].byLevel[level] || 0) + 1;
+            });
+            setAssignedSummaryByUserId(summary);
+          } else {
+            setAssignedSummaryByUserId({});
+          }
+        } else {
+          setAssignedSummaryByUserId({});
+        }
+        setIsLoading(false);
+        return;
+      }
+
+      if (!currentTenant) {
+        setUsers([]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Teacher/non-admin: only users in current tenant
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('*')
@@ -108,18 +226,23 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       const userIds = rolesData?.map(r => r.user_id) || [];
       if (userIds.length === 0) {
         setUsers([]);
+        setAssignedSummaryByUserId({});
         setIsLoading(false);
         return;
       }
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('user_id, full_name, email, created_at')
         .in('user_id', userIds);
 
       if (profilesError) throw profilesError;
 
-      // Fetch assigned lessons summary for users in this tenant
+      const profileByUserId = new Map<string, { full_name: string | null; email: string | null; created_at: string }>();
+      (profilesData || []).forEach((p: { user_id: string; full_name: string | null; email: string | null; created_at: string }) => {
+        profileByUserId.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null, created_at: p.created_at });
+      });
+
       const { data: assignmentsData, error: assignmentsError } = await (supabase as any)
         .from('user_lesson_assignments')
         .select('user_id, lesson_id, lessons(level)')
@@ -140,14 +263,14 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
       });
       setAssignedSummaryByUserId(summary);
 
-      // Build list from user_roles (source of truth) so new users show up even if profile is delayed
       const usersWithRoles: UserWithRole[] = (rolesData || []).map((roleRow) => {
-        const profile = (profilesData || []).find((p) => p.user_id === roleRow.user_id);
-        const profileEmail = (profile as any)?.email as string | undefined;
+        const profile = profileByUserId.get(roleRow.user_id);
+        const displayEmail = profile?.email?.trim() || null;
+        const displayName = profile?.full_name?.trim() || null;
         return {
           id: roleRow.user_id,
-          email: profileEmail ?? roleRow.user_id.substring(0, 8) + '...',
-          full_name: profile?.full_name ?? 'Sin nombre',
+          email: displayEmail ?? roleRow.user_id.substring(0, 8) + '...',
+          full_name: displayName ?? 'Sin nombre',
           role: roleRow.role ?? null,
           role_id: roleRow.id ?? null,
           created_at: profile?.created_at ?? roleRow.created_at,
@@ -166,10 +289,47 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     }
   };
 
-  const handleDeleteUser = async (userId: string, targetUserRole: string | null) => {
-    if (!currentTenant) return;
+  /** Remove user from a single organization (admin only when passing tenantId) */
+  const handleRemoveUserFromOrg = async (userId: string, tenantId: string, tenantName?: string, targetUserRole?: string | null) => {
+    if (userId === currentUser?.id) {
+      toast({
+        title: "Acción no permitida",
+        description: "No puedes eliminarte a ti mismo de la organización",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (currentUserRole !== 'admin' && targetUserRole === 'admin') {
+      toast({
+        title: "Acción no permitida",
+        description: "No tienes permisos para eliminar administradores",
+        variant: "destructive"
+      });
+      return;
+    }
+    const label = tenantName ? ` de "${tenantName}"` : "";
+    if (!confirm(`¿Quitar a este usuario${label}? Ya no tendrá acceso a esa organización.`)) return;
 
-    // Safety checks
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .match({ user_id: userId, tenant_id: tenantId });
+      if (error) throw error;
+      toast({ title: "Usuario removido", description: `Removido de la organización${label}` });
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo remover", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, targetUserRole: string | null) => {
+    const tenantId = currentTenant?.id;
+    if (!tenantId) return;
+
     if (userId === currentUser?.id) {
       toast({
         title: "Acción no permitida",
@@ -194,14 +354,10 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
 
     setIsLoading(true);
     try {
-      // Find and delete the role assignment
       const { error } = await supabase
         .from('user_roles')
         .delete()
-        .match({
-          user_id: userId,
-          tenant_id: currentTenant.id
-        });
+        .match({ user_id: userId, tenant_id: tenantId });
 
       if (error) throw error;
 
@@ -222,6 +378,40 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
     }
   };
 
+  const handleAddToOrgOpen = (user: UserWithRole) => {
+    setAddToOrgUser(user);
+    setAddToOrgTenantId(tenants.length ? tenants[0].id : "");
+    setAddToOrgRole("student");
+    setAddToOrgDialogOpen(true);
+  };
+
+  const handleAddToOrgSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addToOrgUser || !addToOrgTenantId) return;
+    const alreadyIn = addToOrgUser.organizations?.some(o => o.tenant_id === addToOrgTenantId);
+    if (alreadyIn) {
+      toast({ title: "Ya está en la organización", description: "El usuario ya tiene un rol en esa organización.", variant: "destructive" });
+      return;
+    }
+    setIsAddingToOrg(true);
+    try {
+      const { error } = await (supabase as any).rpc("add_user_role_to_tenant", {
+        _user_id: addToOrgUser.id,
+        _tenant_id: addToOrgTenantId,
+        _role: addToOrgRole,
+      });
+      if (error) throw error;
+      toast({ title: "Usuario agregado", description: "Se agregó el usuario a la organización con el rol seleccionado." });
+      setAddToOrgDialogOpen(false);
+      setAddToOrgUser(null);
+      await fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "No se pudo agregar", variant: "destructive" });
+    } finally {
+      setIsAddingToOrg(false);
+    }
+  };
+
   const handleCreate = () => {
     setIsEditing(false);
     setEditingUser(null);
@@ -237,11 +427,12 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
   const handleEdit = (user: UserWithRole) => {
     setIsEditing(true);
     setEditingUser(user);
+    const roleInCurrentTenant = currentTenant && user.organizations?.find(o => o.tenant_id === currentTenant.id)?.role;
     setFormData({
       email: "",
       password: "",
       full_name: user.full_name || "",
-      role: user.role || "student",
+      role: (roleInCurrentTenant ?? user.role) || "student",
     });
     setIsDialogOpen(true);
   };
@@ -263,21 +454,18 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
           .eq("user_id", editingUser.id)
           .select();
 
-        if (editingUser.role_id) {
+        const roleInCurrentTenant = editingUser.organizations?.find(o => o.tenant_id === currentTenant.id);
+        if (roleInCurrentTenant?.role_id) {
           await supabase
             .from("user_roles")
             .update({ role })
-            .eq("tenant_id", currentTenant.id)
-            .eq("user_id", editingUser.id);
+            .eq("id", roleInCurrentTenant.role_id);
         } else {
-          await supabase
-            .from("user_roles")
-            .insert({
-              user_id: editingUser.id,
-              tenant_id: currentTenant.id,
-              role,
-            })
-            .select();
+          await (supabase as any).rpc("add_user_role_to_tenant", {
+            _user_id: editingUser.id,
+            _tenant_id: currentTenant.id,
+            _role: role,
+          });
         }
         toast({
           title: "Usuario actualizado",
@@ -666,7 +854,9 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
               Gestión de Usuarios
             </CardTitle>
             <CardDescription>
-              Administra los usuarios de {currentTenant?.name || "la organización"}
+              {isAdminView
+                ? "Todos los usuarios del sistema. Agrega, quita o edita usuarios en cualquier organización."
+                : `Administra los usuarios de ${currentTenant?.name || "la organización"}`}
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -822,7 +1012,8 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Rol</TableHead>
+                {isAdminView && <TableHead>Organizaciones</TableHead>}
+                {!isAdminView && <TableHead>Rol</TableHead>}
                 <TableHead>Lecciones asignadas</TableHead>
                 <TableHead>Fecha de Registro</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -831,7 +1022,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
             <TableBody>
               {filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={isAdminView ? 6 : 6} className="text-center py-8 text-muted-foreground">
                     {searchTerm ? "No se encontraron usuarios" : "No hay usuarios registrados"}
                   </TableCell>
                 </TableRow>
@@ -847,17 +1038,47 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                    <TableCell>
-                      <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
-                        {user.role === "admin"
-                          ? "Administrador"
-                          : user.role === "teacher"
-                          ? "Profesor"
-                          : user.role === "student"
-                          ? "Estudiante"
-                          : "Sin rol"}
-                      </span>
-                    </TableCell>
+                    {isAdminView ? (
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          {(user.organizations ?? []).map((org) => (
+                            <span
+                              key={org.tenant_id}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-muted"
+                            >
+                              <Building2 className="w-3 h-3" />
+                              {org.tenant_name}
+                              <span className="text-muted-foreground">
+                                ({org.role === "admin" ? "Admin" : org.role === "teacher" ? "Profesor" : "Estudiante"})
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 text-destructive hover:text-destructive"
+                                onClick={() => handleRemoveUserFromOrg(user.id, org.tenant_id, org.tenant_name, org.role)}
+                                disabled={isLoading || user.id === currentUser?.id}
+                                title="Quitar de esta organización"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                    ) : (
+                      <TableCell>
+                        <span className="px-2 py-1 bg-primary/10 text-primary rounded text-xs font-medium">
+                          {user.role === "admin"
+                            ? "Administrador"
+                            : user.role === "teacher"
+                            ? "Profesor"
+                            : user.role === "student"
+                            ? "Estudiante"
+                            : "Sin rol"}
+                        </span>
+                      </TableCell>
+                    )}
                     <TableCell>
                       {(() => {
                         const s = assignedSummaryByUserId[user.id];
@@ -879,8 +1100,21 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                       {new Date(user.created_at).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {(currentUserRole === 'admin' || currentUserRole === 'teacher') && (user.role === 'student' || !user.role) && (
+                      <div className="flex items-center justify-end gap-2 flex-wrap">
+                        {isAdminView && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAddToOrgOpen(user)}
+                            disabled={isLoading || (tenants.length === 0)}
+                            title="Agregar a una organización"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Agregar a org
+                          </Button>
+                        )}
+                        {!isAdminView && (currentUserRole === 'admin' || currentUserRole === 'teacher') && (user.role === 'student' || !user.role) && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -901,19 +1135,21 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id, user.role)}
-                          disabled={
-                            isLoading ||
-                            user.id === currentUser?.id ||
-                            (user.role === "admin" && currentUserRole !== "admin")
-                          }
-                          title="Eliminar usuario"
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                        {!isAdminView && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id, user.role)}
+                            disabled={
+                              isLoading ||
+                              user.id === currentUser?.id ||
+                              (user.role === "admin" && currentUserRole !== "admin")
+                            }
+                            title="Eliminar de la organización"
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -923,6 +1159,65 @@ const UsersManagement = ({ currentTenant, currentUserRole, onInvite }: UsersMana
           </Table>
         )}
       </CardContent>
+
+      {/* Add user to organization (admin only) */}
+      <Dialog open={addToOrgDialogOpen} onOpenChange={(open) => {
+        if (!open) { setAddToOrgUser(null); setAddToOrgTenantId(""); }
+        setAddToOrgDialogOpen(open);
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Agregar a organización</DialogTitle>
+            <DialogDescription>
+              {addToOrgUser
+                ? `Agregar a ${addToOrgUser.full_name || addToOrgUser.email} a una organización con un rol.`
+                : "Selecciona organización y rol."}
+            </DialogDescription>
+          </DialogHeader>
+          {addToOrgUser && (
+            <form onSubmit={handleAddToOrgSubmit} className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Organización</Label>
+                <Select value={addToOrgTenantId} onValueChange={setAddToOrgTenantId} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Elegir organización" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tenants
+                      .filter(t => !addToOrgUser.organizations?.some(o => o.tenant_id === t.id))
+                      .map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {tenants.filter(t => !addToOrgUser.organizations?.some(o => o.tenant_id === t.id)).length === 0 && (
+                  <p className="text-sm text-muted-foreground">El usuario ya está en todas las organizaciones.</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Rol</Label>
+                <Select value={addToOrgRole} onValueChange={(v: "admin" | "teacher" | "student") => setAddToOrgRole(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="teacher">Profesor</SelectItem>
+                    <SelectItem value="student">Estudiante</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddToOrgDialogOpen(false)}>Cancelar</Button>
+                <Button type="submit" disabled={isAddingToOrg || !addToOrgTenantId}>
+                  {isAddingToOrg && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Agregar
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Import Users Dialog */}
       <Dialog open={importDialogOpen} onOpenChange={(open) => {
