@@ -42,7 +42,7 @@ export const useInvitations = (tenantId: string | null) => {
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
-      setInvitations((data || []) as Invitation[]);
+      setInvitations((data || []) as unknown as Invitation[]);
     } catch (err: any) {
       setError(err);
       console.error('Error fetching invitations:', err);
@@ -70,7 +70,7 @@ export const useInvitations = (tenantId: string | null) => {
 
     if (createError) throw createError;
     await fetchInvitations();
-    return data as Invitation;
+    return data as unknown as Invitation;
   };
 
   const cancelInvitation = async (invitationId: string) => {
@@ -135,7 +135,7 @@ export const useInvitationAcceptance = () => {
         if (fetchError.code === 'PGRST116') return null; // Not found
         throw fetchError;
       }
-      return data as Invitation;
+      return data as unknown as Invitation;
     } catch (err: any) {
       console.error('Error fetching invitation:', err);
       return null;

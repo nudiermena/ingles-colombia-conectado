@@ -48,7 +48,7 @@ const Courses = () => {
     if (!currentTenant) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("courses")
         .select("*")
         .eq("tenant_id", currentTenant.id)
@@ -68,7 +68,7 @@ const Courses = () => {
     if (!currentTenant || !user) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("course_enrollments")
         .select(`
           *,
@@ -88,7 +88,7 @@ const Courses = () => {
     if (!currentTenant || !user) return;
 
     try {
-      const { error } = await supabase.from("course_enrollments").insert({
+      const { error } = await (supabase as any).from("course_enrollments").insert({
         user_id: user.id,
         tenant_id: currentTenant.id,
         course_id: courseId,

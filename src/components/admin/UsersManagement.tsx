@@ -130,7 +130,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           return;
         }
 
-        const { data: profilesData, error: profilesError } = await supabase
+        const { data: profilesData, error: profilesError } = await (supabase as any)
           .from('profiles')
           .select('user_id, full_name, email, created_at')
           .in('user_id', userIds);
@@ -235,7 +235,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
         return;
       }
 
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: profilesData, error: profilesError } = await (supabase as any)
         .from('profiles')
         .select('user_id, full_name, email, created_at')
         .in('user_id', userIds);
@@ -797,7 +797,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           .eq('lesson_id', a.lesson_id);
         if (delProgressError) {
           console.warn('No se pudo borrar progreso al desasignar (¿migración aplicada?):', delProgressError);
-          toast({ title: "Aviso", description: "Asignación actualizada. Si el estudiante ya tenía progreso, aplica la migración de permisos para que al reasignar empiece desde cero.", variant: "secondary" });
+          toast({ title: "Aviso", description: "Asignación actualizada. Si el estudiante ya tenía progreso, aplica la migración de permisos para que al reasignar empiece desde cero.", variant: "destructive" });
         }
       }
       for (const lessonId of toAdd) {
@@ -809,7 +809,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           .eq('lesson_id', lessonId);
         if (delProgressError) {
           console.warn('No se pudo borrar progreso al reasignar (¿migración aplicada?):', delProgressError);
-          toast({ title: "Aviso", description: "Lección asignada. Si el estudiante ya tenía progreso, aplica la migración de permisos para que empiece desde cero.", variant: "secondary" });
+          toast({ title: "Aviso", description: "Lección asignada. Si el estudiante ya tenía progreso, aplica la migración de permisos para que empiece desde cero.", variant: "destructive" });
         }
         const { error: insertError } = await (supabase as any).from('user_lesson_assignments').insert({
           user_id: assigningUser.id,

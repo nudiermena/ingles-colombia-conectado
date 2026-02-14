@@ -63,7 +63,7 @@ const CourseDetail = () => {
     if (!id) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("courses")
         .select("*")
         .eq("id", id)
@@ -82,7 +82,7 @@ const CourseDetail = () => {
     if (!id) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("units")
         .select("id, unit_number, title, is_welcome_unit, order_index")
         .eq("course_id", id)
@@ -100,7 +100,7 @@ const CourseDetail = () => {
     if (!user || !currentTenant) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("unit_progress")
         .select("unit_id, progress_percentage, completed")
         .eq("user_id", user.id)
@@ -108,7 +108,7 @@ const CourseDetail = () => {
 
       if (error) throw error;
 
-      const byUnit = (data || []).reduce<Record<string, UnitProgress>>((acc, row) => {
+      const byUnit = (data || []).reduce((acc: Record<string, UnitProgress>, row: any) => {
         acc[row.unit_id] = {
           unit_id: row.unit_id,
           progress_percentage: row.progress_percentage,

@@ -89,7 +89,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
     if (!currentTenant) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("courses")
         .select("*")
         .eq("tenant_id", currentTenant.id)
@@ -112,7 +112,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
   const fetchUnits = async (courseId: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("units")
         .select(`
           *,
@@ -187,7 +187,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
       }
 
       if (isEditing && editingUnit) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("units")
           .update(unitData)
           .eq("id", editingUnit.id);
@@ -198,7 +198,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
           description: "La unidad ha sido actualizada exitosamente",
         });
       } else {
-        const { error } = await supabase.from("units").insert(unitData);
+        const { error } = await (supabase as any).from("units").insert(unitData);
 
         if (error) throw error;
         toast({
@@ -227,7 +227,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("units").delete().eq("id", unitId);
+      const { error } = await (supabase as any).from("units").delete().eq("id", unitId);
 
       if (error) throw error;
 
@@ -253,7 +253,7 @@ const UnitsManagement = ({ currentTenant }: UnitsManagementProps) => {
   const downloadLessonPlanPdf = async (unit: Unit) => {
     setDownloadingPdfUnitId(unit.id);
     try {
-      const { data: contentRows, error } = await supabase
+      const { data: contentRows, error } = await (supabase as any)
         .from("unit_content")
         .select("content_type, title, content, order_index")
         .eq("unit_id", unit.id)

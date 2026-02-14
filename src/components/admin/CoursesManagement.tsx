@@ -75,7 +75,7 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
 
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("courses")
         .select("*")
         .eq("tenant_id", currentTenant.id)
@@ -148,7 +148,7 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
       };
 
       if (isEditing && editingCourse) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("courses")
           .update(courseData)
           .eq("id", editingCourse.id);
@@ -159,7 +159,7 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
           description: "El curso ha sido actualizado exitosamente",
         });
       } else {
-        const { error } = await supabase.from("courses").insert(courseData);
+        const { error } = await (supabase as any).from("courses").insert(courseData);
 
         if (error) {
           const isDuplicate =
@@ -208,7 +208,7 @@ const CoursesManagement = ({ currentTenant }: CoursesManagementProps) => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("courses").delete().eq("id", courseId);
+      const { error } = await (supabase as any).from("courses").delete().eq("id", courseId);
 
       if (error) throw error;
 

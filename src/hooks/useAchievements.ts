@@ -46,7 +46,7 @@ export const useAchievements = (userId: string | undefined, tenantId: string | n
 
     setLoading(true);
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await (supabase as any)
         .from('user_achievements')
         .select('*')
         .eq('user_id', userId)
@@ -70,7 +70,7 @@ export const useAchievements = (userId: string | undefined, tenantId: string | n
     if (exists) return;
 
     try {
-      const { error: insertError } = await supabase
+      const { error: insertError } = await (supabase as any)
         .from('user_achievements')
         .insert({
           user_id: userId,

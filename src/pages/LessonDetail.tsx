@@ -419,7 +419,7 @@ const ExerciseComponent = ({
         lang="en-US"
         isCompleted={isCompleted}
         onComplete={onComplete}
-        onSpeakReference={(text, lang) => speak(text, { lang: lang || 'en-US' })}
+        onSpeakReference={(text: string, lang?: string) => (speak as any)(text, { lang: lang || 'en-US' })}
         onStopReference={stop}
         isSpeakingReference={isSpeaking}
         isPreparingReference={isPreparingSpeak}
@@ -1034,14 +1034,14 @@ const LessonDetail = () => {
                         toast({
                           title: correct ? "¡Correcto!" : "Sigue intentando",
                           description: correct ? "Buen trabajo, sigue así." : "Revisa la respuesta y continúa.",
-                          variant: correct ? "default" : "secondary",
+                          variant: correct ? "default" : "destructive",
                         });
                       }
                       if (correct === true && !correctExercises.includes(idx)) {
                         setCorrectExercises([...correctExercises, idx]);
                       }
                     }}
-                    speak={speak}
+                    speak={(text: string, lang?: string) => speak(text, { lang: lang || 'en-US' })}
                     stop={stop}
                     isSpeaking={isSpeaking}
                     isPreparingSpeak={isPreparingSpeak}

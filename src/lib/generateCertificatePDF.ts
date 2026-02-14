@@ -34,17 +34,17 @@ export const generateCertificatePDF = (
   doc.rect(0, 0, 297, 210, 'F');
 
   // Border
-  doc.setDrawColor(...primaryColor);
+  doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setLineWidth(2);
   doc.rect(10, 10, 277, 190);
 
   // Inner border
-  doc.setDrawColor(...primaryColor);
+  doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setLineWidth(0.5);
   doc.rect(15, 15, 267, 180);
 
   // Header decoration
-  doc.setFillColor(...primaryColor);
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.roundedRect(20, 20, 257, 40, 3, 3, 'F');
 
   // Title
@@ -58,7 +58,7 @@ export const generateCertificatePDF = (
   doc.text('Certificate of Completion', 148.5, 48, { align: 'center' });
 
   // Student name - no symbol/icon to avoid encoding issues
-  doc.setTextColor(...darkColor);
+  doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
   doc.setFontSize(22);
   doc.setFont('helvetica', 'bold');
   const studentName = (userData.fullName || userData.email || 'Estudiante').toString();
@@ -76,11 +76,11 @@ export const generateCertificatePDF = (
   // Certificate title
   doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.setTextColor(...darkColor);
+  doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
   doc.text(certificate.title, 148.5, 118, { align: 'center', maxWidth: 240 });
 
   // Level badge
-  doc.setFillColor(...successColor);
+  doc.setFillColor(successColor[0], successColor[1], successColor[2]);
   doc.circle(148.5, 138, 14, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
@@ -92,7 +92,7 @@ export const generateCertificatePDF = (
   if (certificate.skills && certificate.skills.length > 0) {
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...darkColor);
+    doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
     doc.text('Habilidades Adquiridas:', 148.5, yPos, { align: 'center' });
     yPos += 8;
 
