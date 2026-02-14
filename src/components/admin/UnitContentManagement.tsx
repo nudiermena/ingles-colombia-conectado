@@ -117,7 +117,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
     if (!currentTenant) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("courses")
         .select("*")
         .eq("tenant_id", currentTenant.id)
@@ -139,7 +139,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
 
   const fetchUnits = async (courseId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("units")
         .select("*")
         .eq("course_id", courseId)
@@ -163,7 +163,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
   const fetchContents = async (unitId: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("unit_content")
         .select("*")
         .eq("unit_id", unitId)
@@ -237,7 +237,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
       };
 
       if (isEditing && editingContent) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("unit_content")
           .update(contentData)
           .eq("id", editingContent.id);
@@ -248,7 +248,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
           description: "El contenido ha sido actualizado exitosamente",
         });
       } else {
-        const { error } = await supabase.from("unit_content").insert(contentData);
+        const { error } = await (supabase as any).from("unit_content").insert(contentData);
 
         if (error) throw error;
         toast({
@@ -277,7 +277,7 @@ const UnitContentManagement = ({ currentTenant }: UnitContentManagementProps) =>
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("unit_content").delete().eq("id", contentId);
+      const { error } = await (supabase as any).from("unit_content").delete().eq("id", contentId);
 
       if (error) throw error;
 

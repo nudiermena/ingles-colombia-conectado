@@ -52,7 +52,7 @@ export const useLessons = (tenantId: string | null) => {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await (supabase as any)
         .from('lessons')
         .select('*')
         .eq('tenant_id', tenantId)
@@ -85,7 +85,7 @@ export const useLessons = (tenantId: string | null) => {
   const createLesson = async (lessonData: Partial<Lesson>) => {
     if (!tenantId) throw new Error('No tenant selected');
 
-    const { data, error: createError } = await supabase
+    const { data, error: createError } = await (supabase as any)
       .from('lessons')
       .insert({
         ...lessonData,
@@ -100,7 +100,7 @@ export const useLessons = (tenantId: string | null) => {
   };
 
   const updateLesson = async (lessonId: string, updates: Partial<Lesson>) => {
-    const { data, error: updateError } = await supabase
+    const { data, error: updateError } = await (supabase as any)
       .from('lessons')
       .update(updates)
       .eq('id', lessonId)
@@ -113,7 +113,7 @@ export const useLessons = (tenantId: string | null) => {
   };
 
   const deleteLesson = async (lessonId: string) => {
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await (supabase as any)
       .from('lessons')
       .delete()
       .eq('id', lessonId);
@@ -160,7 +160,7 @@ export const useAssignedLessonIds = (userId: string | undefined, tenantId: strin
     }
     const fetchAssignments = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_lesson_assignments')
         .select('lesson_id, due_date, assigned_at, time_limit_minutes, submitted_at')
         .eq('user_id', userId)
@@ -218,7 +218,7 @@ export const useLessonProgress = (userId: string | undefined, tenantId: string |
 
     setLoading(true);
     try {
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await (supabase as any)
         .from('lesson_progress')
         .select('*')
         .eq('user_id', userId)
@@ -256,7 +256,7 @@ export const useLessonProgress = (userId: string | undefined, tenantId: string |
     };
 
     if (existingProgress) {
-      const { data, error: updateError } = await supabase
+      const { data, error: updateError } = await (supabase as any)
         .from('lesson_progress')
         .update(updateData)
         .eq('id', existingProgress.id)
@@ -267,7 +267,7 @@ export const useLessonProgress = (userId: string | undefined, tenantId: string |
       await fetchProgress();
       return data;
     } else {
-      const { data, error: insertError } = await supabase
+      const { data, error: insertError } = await (supabase as any)
         .from('lesson_progress')
         .insert({
           user_id: userId,

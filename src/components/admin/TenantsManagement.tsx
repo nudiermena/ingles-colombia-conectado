@@ -150,7 +150,7 @@ const TenantsManagement = ({ currentTenant, currentUserRole, onSwitchToLessons }
       const tenantIds = tenantsToCheck.map(t => t.id);
       
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('lessons')
           .select('tenant_id, level')
           .in('tenant_id', tenantIds)
@@ -185,7 +185,7 @@ const TenantsManagement = ({ currentTenant, currentUserRole, onSwitchToLessons }
   // Fetch available lessons from all organizations for assignment
   const fetchAvailableLessons = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('lessons')
         .select('*')
         .eq('is_active', true)
@@ -241,7 +241,7 @@ const TenantsManagement = ({ currentTenant, currentUserRole, onSwitchToLessons }
       }));
 
       // Check for duplicates first
-      const { data: existingLessons } = await supabase
+      const { data: existingLessons } = await (supabase as any)
         .from('lessons')
         .select('title, level')
         .eq('tenant_id', selectedTenantForAssignment.id);
@@ -270,7 +270,7 @@ const TenantsManagement = ({ currentTenant, currentUserRole, onSwitchToLessons }
       let inserted = 0;
       for (let i = 0; i < uniqueLessons.length; i += batchSize) {
         const batch = uniqueLessons.slice(i, i + batchSize);
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from('lessons')
           .insert(batch);
 
@@ -285,7 +285,7 @@ const TenantsManagement = ({ currentTenant, currentUserRole, onSwitchToLessons }
 
       // Refresh stats
       const tenantIds = allTenants.length > 0 ? allTenants.map(t => t.id) : userTenants.map(t => t.id);
-      const { data: updatedStats } = await supabase
+      const { data: updatedStats } = await (supabase as any)
         .from('lessons')
         .select('tenant_id, level')
         .in('tenant_id', tenantIds)

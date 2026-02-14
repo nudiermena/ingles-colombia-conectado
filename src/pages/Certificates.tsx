@@ -62,21 +62,21 @@ const Certificates = () => {
       }
       setLoading(true);
       try {
-        const { data: assignments } = await supabase
+        const { data: assignments } = await (supabase as any)
           .from("user_lesson_assignments")
           .select("lesson_id")
           .eq("user_id", user.id)
           .eq("tenant_id", currentTenant.id);
         const assignedLessonIds = new Set((assignments || []).map((a) => a.lesson_id));
 
-        const { data: lessons } = await supabase
+        const { data: lessons } = await (supabase as any)
           .from("lessons")
           .select("id, level")
           .eq("tenant_id", currentTenant.id)
           .eq("is_active", true);
         const lessonLevelMap = new Map<string, string>((lessons || []).map((l) => [l.id, l.level]));
 
-        const { data: progress } = await supabase
+        const { data: progress } = await (supabase as any)
           .from("lesson_progress")
           .select("lesson_id, completed, completed_at")
           .eq("user_id", user.id)

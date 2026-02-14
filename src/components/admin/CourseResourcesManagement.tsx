@@ -122,7 +122,7 @@ const CourseResourcesManagement = ({ currentTenant }: CourseResourcesManagementP
     if (!currentTenant) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("courses")
         .select("id, course_number, title")
         .eq("tenant_id", currentTenant.id)
@@ -144,7 +144,7 @@ const CourseResourcesManagement = ({ currentTenant }: CourseResourcesManagementP
 
   const fetchUnits = async (courseId: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("units")
         .select("id, unit_number, title, is_welcome_unit")
         .eq("course_id", courseId)
@@ -165,7 +165,7 @@ const CourseResourcesManagement = ({ currentTenant }: CourseResourcesManagementP
   const fetchResources = async (courseId: string, unitId: string | null) => {
     setIsLoading(true);
     try {
-      let query = supabase
+      let query = (supabase as any)
         .from("course_resources")
         .select("*")
         .eq("course_id", courseId)
@@ -247,7 +247,7 @@ const CourseResourcesManagement = ({ currentTenant }: CourseResourcesManagementP
       };
 
       if (isEditing && editingResource) {
-        const { error } = await supabase
+        const { error } = await (supabase as any)
           .from("course_resources")
           .update(resourceData)
           .eq("id", editingResource.id);
@@ -258,7 +258,7 @@ const CourseResourcesManagement = ({ currentTenant }: CourseResourcesManagementP
           description: "El recurso ha sido actualizado exitosamente",
         });
       } else {
-        const { error } = await supabase.from("course_resources").insert(resourceData);
+        const { error } = await (supabase as any).from("course_resources").insert(resourceData);
 
         if (error) throw error;
         toast({
@@ -287,7 +287,7 @@ const CourseResourcesManagement = ({ currentTenant }: CourseResourcesManagementP
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("course_resources").delete().eq("id", resourceId);
+      const { error } = await (supabase as any).from("course_resources").delete().eq("id", resourceId);
 
       if (error) throw error;
 

@@ -181,7 +181,7 @@ export const useTenant = (userId: string | undefined) => {
 
     try {
       // Try using the database function first (if migration has been run)
-      const { data: tenantId, error: functionError } = await supabase
+      const { data: tenantId, error: functionError } = await (supabase as any)
         .rpc('create_tenant_with_admin', {
           _name: name,
           _slug: slug,

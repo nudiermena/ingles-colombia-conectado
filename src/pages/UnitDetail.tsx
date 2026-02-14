@@ -81,7 +81,7 @@ const UnitDetail = () => {
     if (!unitId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("units")
         .select("*")
         .eq("id", unitId)
@@ -100,7 +100,7 @@ const UnitDetail = () => {
     if (!unitId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("unit_content")
         .select("id, content_type, title, content, order_index")
         .eq("unit_id", unitId)
@@ -120,7 +120,7 @@ const UnitDetail = () => {
     if (!unitId) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("course_resources")
         .select("id, resource_type, title, url, description, is_teacher_only")
         .eq("unit_id", unitId)
@@ -138,7 +138,7 @@ const UnitDetail = () => {
     if (!user || !currentTenant || !unitId) return;
 
     try {
-      await supabase.from("unit_progress").upsert(
+      await (supabase as any).from("unit_progress").upsert(
         {
           user_id: user.id,
           tenant_id: currentTenant.id,

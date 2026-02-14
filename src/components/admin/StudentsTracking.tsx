@@ -174,7 +174,7 @@ const StudentsTracking = ({ currentTenant }: StudentsTrackingProps) => {
       if (assignmentsError) throw assignmentsError;
       setAssignedLessons(assignmentsData || []);
 
-      const { data: progressData, error: progressError } = await supabase
+      const { data: progressData, error: progressError } = await (supabase as any)
         .from("lesson_progress")
         .select("lesson_id, progress_percentage, completed, time_spent_minutes, last_accessed_at, completed_at, exercise_results")
         .eq("tenant_id", currentTenant.id)
