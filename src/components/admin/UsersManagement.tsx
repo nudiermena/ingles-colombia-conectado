@@ -563,7 +563,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
       }
 
       setIsDialogOpen(false);
-      setFormData({ email: "", password: "", full_name: "", role: "student" });
+      setFormData({ email: "", password: "", full_name: "", username: "", role: "student" });
       setEditingUser(null);
       await fetchUsers();
     } catch (error: any) {
@@ -952,7 +952,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                 setIsDialogOpen(open);
                 if (!open) {
                   setEditingUser(null);
-                  setFormData({ email: "", password: "", full_name: "", role: "student" });
+                  setFormData({ email: "", password: "", full_name: "", username: "", role: "student" });
                 }
               }}
             >
