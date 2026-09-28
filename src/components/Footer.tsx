@@ -15,7 +15,7 @@ const Footer = () => {
               <span className="text-xl font-bold text-foreground">EnglishCo</span>
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              La plataforma líder en aprendizaje de inglés para estudiantes colombianos. 
+              La plataforma líder en aprendizaje de inglés para estudiantes colombianos.
               Aprende, practica y certifica tu nivel.
             </p>
           </div>
@@ -68,7 +68,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Phone className="w-4 h-4" />
-                <span className="text-sm">+57(313)7076032</span>
+                <span className="text-sm">+57(350)7679981</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4" />

@@ -8,8 +8,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signIn: (identifier: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, username?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   currentTenantId: string | null;
   setCurrentTenantId: (tenantId: string | null) => void;
@@ -62,9 +62,52 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (identifier: string, password: string) => {
+    const cleanIdentifier = identifier?.trim();
+    if (!cleanIdentifier) {
+      return { error: new Error("Por favor ingresa tu correo electrónico o nombre de usuario") };
+    }
+
+    let emailToUse = cleanIdentifier;
+
+    // Si no contiene '@', buscamos el correo asociado a ese nombre de usuario
+    if (!cleanIdentifier.includes('@')) {
+      try {
+        const { data: resolvedEmail, error: rpcError } = await (supabase as any).rpc('get_email_by_identifier', {
+          _identifier: cleanIdentifier,
+        });
+
+        if (!rpcError && resolvedEmail) {
+          emailToUse = resolvedEmail;
+        } else {
+          // Fallback consultando profiles directamente si la función RPC aún no está creada
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email')
+            .or(`username.ilike.${cleanIdentifier},email.ilike.${cleanIdentifier}`)
+            .maybeSingle();
+
+          if (profile?.email) {
+            emailToUse = profile.email;
+          } else if (rpcError && (rpcError.message?.includes('does not exist') || rpcError.code === '42883')) {
+            return {
+              error: new Error(
+                "Para iniciar sesión con nombre de usuario, ejecuta el script ENABLE_USERNAME_LOGIN.sql en Supabase. Mientras tanto, puedes ingresar con tu correo electrónico."
+              ),
+            };
+          } else {
+            return {
+              error: new Error("No se encontró ningún usuario con ese nombre de usuario o correo."),
+            };
+          }
+        }
+      } catch (err: any) {
+        console.error("Error al resolver username:", err);
+      }
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: emailToUse,
       password,
     });
 
@@ -79,7 +122,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, username?: string) => {
+    const cleanUsername = username?.trim() || email.split('@')[0];
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -87,6 +131,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         emailRedirectTo: `${window.location.origin}/`,
         data: {
           full_name: fullName,
+          username: cleanUsername,
         },
       },
     });

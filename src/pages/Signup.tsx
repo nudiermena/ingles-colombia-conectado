@@ -20,6 +20,7 @@ const Signup = () => {
   const [invitation, setInvitation] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
+    username: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -116,7 +117,7 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signUp(formData.email, formData.password, formData.name);
+      const { error } = await signUp(formData.email, formData.password, formData.name, formData.username);
 
       if (error) {
         toast({
@@ -194,6 +195,28 @@ const Signup = () => {
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     className="pl-10"
                     required
+                  />
+                </div>
+              </div>
+
+              {/* Username Field */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="username">Nombre de Usuario</Label>
+                  <span className="text-xs text-muted-foreground">(opcional)</span>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-semibold">@</span>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="ej: carlos123"
+                    value={formData.username}
+                    onChange={(e) => handleInputChange('username', e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, ''))}
+                    className="pl-8"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
                   />
                 </div>
               </div>

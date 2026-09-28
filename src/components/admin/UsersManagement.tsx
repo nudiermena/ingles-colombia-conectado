@@ -53,6 +53,7 @@ interface UserWithRole {
   id: string;
   email: string;
   full_name: string;
+  username?: string | null;
   role: 'admin' | 'teacher' | 'student' | null;
   role_id: string | null;
   created_at: string;
@@ -75,6 +76,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
     email: "",
     password: "",
     full_name: "",
+    username: "",
     role: "student" as "admin" | "teacher" | "student",
   });
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
@@ -86,7 +88,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
   const [isAssigning, setIsAssigning] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
-  const [importPreview, setImportPreview] = useState<{ email: string; full_name: string; role: "admin" | "teacher" | "student" }[]>([]);
+  const [importPreview, setImportPreview] = useState<{ email: string; full_name: string; username: string; role: "admin" | "teacher" | "student" }[]>([]);
   const [importDefaultPassword, setImportDefaultPassword] = useState("Cambiar123!");
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; errors: string[] } | null>(null);
@@ -132,14 +134,14 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
 
         const { data: profilesData, error: profilesError } = await (supabase as any)
           .from('profiles')
-          .select('user_id, full_name, email, created_at')
+          .select('user_id, full_name, email, username, created_at')
           .in('user_id', userIds);
 
         if (profilesError) throw profilesError;
 
-        const profileByUserId = new Map<string, { full_name: string | null; email: string | null; created_at: string }>();
-        (profilesData || []).forEach((p: { user_id: string; full_name: string | null; email: string | null; created_at: string }) => {
-          profileByUserId.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null, created_at: p.created_at });
+        const profileByUserId = new Map<string, { full_name: string | null; email: string | null; username: string | null; created_at: string }>();
+        (profilesData || []).forEach((p: { user_id: string; full_name: string | null; email: string | null; username?: string | null; created_at: string }) => {
+          profileByUserId.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null, username: p.username ?? null, created_at: p.created_at });
         });
 
         const tenantIds = [...new Set((rolesData || []).map(r => r.tenant_id))];
@@ -170,6 +172,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
               id: roleRow.user_id,
               email: displayEmail ?? roleRow.user_id.substring(0, 8) + '...',
               full_name: displayName ?? 'Sin nombre',
+              username: profile?.username?.trim() || null,
               role: roleRow.role ?? null,
               role_id: roleRow.id ?? null,
               created_at: profile?.created_at ?? roleRow.created_at,
@@ -237,14 +240,14 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
 
       const { data: profilesData, error: profilesError } = await (supabase as any)
         .from('profiles')
-        .select('user_id, full_name, email, created_at')
+        .select('user_id, full_name, email, username, created_at')
         .in('user_id', userIds);
 
       if (profilesError) throw profilesError;
 
-      const profileByUserId = new Map<string, { full_name: string | null; email: string | null; created_at: string }>();
-      (profilesData || []).forEach((p: { user_id: string; full_name: string | null; email: string | null; created_at: string }) => {
-        profileByUserId.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null, created_at: p.created_at });
+      const profileByUserId = new Map<string, { full_name: string | null; email: string | null; username: string | null; created_at: string }>();
+      (profilesData || []).forEach((p: { user_id: string; full_name: string | null; email: string | null; username?: string | null; created_at: string }) => {
+        profileByUserId.set(p.user_id, { full_name: p.full_name ?? null, email: p.email ?? null, username: p.username ?? null, created_at: p.created_at });
       });
 
       const { data: assignmentsData, error: assignmentsError } = await (supabase as any)
@@ -275,6 +278,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           id: roleRow.user_id,
           email: displayEmail ?? roleRow.user_id.substring(0, 8) + '...',
           full_name: displayName ?? 'Sin nombre',
+          username: profile?.username?.trim() || null,
           role: roleRow.role ?? null,
           role_id: roleRow.id ?? null,
           created_at: profile?.created_at ?? roleRow.created_at,
@@ -423,6 +427,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
       email: "",
       password: "",
       full_name: "",
+      username: "",
       role: "student",
     });
     setIsDialogOpen(true);
@@ -436,6 +441,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
       email: "",
       password: "",
       full_name: user.full_name || "",
+      username: user.username || "",
       role: (roleInCurrentTenant ?? user.role) || "student",
     });
     setIsDialogOpen(true);
@@ -455,9 +461,13 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
     setIsSubmitting(true);
     try {
       if (isEditing && editingUser) {
+        const updatePayload: any = { full_name: formData.full_name };
+        if (formData.username?.trim()) {
+          updatePayload.username = formData.username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+        }
         await supabase
           .from("profiles")
-          .update({ full_name: formData.full_name })
+          .update(updatePayload)
           .eq("user_id", editingUser.id)
           .select();
 
@@ -481,11 +491,18 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
           description: currentUserRole === 'teacher' ? "Nombre actualizado correctamente" : "El usuario ha sido actualizado exitosamente",
         });
       } else {
+        const cleanUsername = formData.username?.trim()
+          ? formData.username.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '')
+          : formData.email.trim().split('@')[0].toLowerCase().replace(/[^a-z0-9._-]/g, '');
+
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: formData.email.trim(),
           password: formData.password,
           options: {
-            data: { full_name: formData.full_name || formData.email.trim() },
+            data: {
+              full_name: formData.full_name || formData.email.trim(),
+              username: cleanUsername,
+            },
           },
         });
 
@@ -502,6 +519,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
             user_id: userId,
             full_name: formData.full_name?.trim() || data.user.email || "Usuario",
             email: data.user.email,
+            username: cleanUsername,
           },
           { onConflict: "user_id" }
         );
@@ -603,31 +621,67 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
     }
   };
 
-  const parseImportFile = (file: File): Promise<{ email: string; full_name: string; role: "admin" | "teacher" | "student" }[]> => {
+  const generateUsernameFromName = (name: string): string => {
+    const normalized = name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+    const parts = normalized.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return `${parts[0]}.${parts[1]}`.replace(/[^a-z0-9.]/g, "");
+    }
+    return (parts[0] || "usuario").replace(/[^a-z0-9.]/g, "");
+  };
+
+  const parseImportFile = (file: File): Promise<{ email: string; full_name: string; username: string; role: "admin" | "teacher" | "student" }[]> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         const text = (reader.result as string) || "";
         const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
         const isCsv = file.name.toLowerCase().endsWith(".csv");
-        const rows: { email: string; full_name: string; role: "admin" | "teacher" | "student" }[] = [];
+        const rows: { email: string; full_name: string; username: string; role: "admin" | "teacher" | "student" }[] = [];
         const validRoles = ["admin", "teacher", "student"] as const;
 
         let start = 0;
         if (isCsv && lines.length > 0) {
           const first = lines[0].toLowerCase();
-          if (first.includes("email") && (first.includes("name") || first.includes("nombre") || first.includes("role") || first.includes("rol"))) start = 1;
+          if (first.includes("email") || first.includes("correo") || first.includes("name") || first.includes("nombre") || first.includes("role") || first.includes("rol")) start = 1;
         }
         for (let i = start; i < lines.length; i++) {
           const line = lines[i];
           const parts = isCsv ? line.split(/[,;]/).map((p) => p.trim()) : line.split(/[\t,]/).map((p) => p.trim());
-          if (parts.length === 0) continue;
-          const email = parts[0];
-          if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) continue;
-          const full_name = parts[1] || email.split("@")[0] || "Usuario";
-          const roleRaw = (parts[2] || "student").toLowerCase();
+          if (parts.length === 0 || !parts[0]) continue;
+
+          let email = "";
+          let full_name = "";
+          let roleRaw = "student";
+
+          // Si la primera columna tiene '@', es correo
+          if (parts[0].includes("@")) {
+            email = parts[0];
+            full_name = parts[1] || email.split("@")[0] || "Usuario";
+            roleRaw = (parts[2] || "student").toLowerCase();
+          } else {
+            // La primera columna es nombre
+            full_name = parts[0];
+            if (parts[1]?.includes("@")) {
+              email = parts[1];
+              roleRaw = (parts[2] || "student").toLowerCase();
+            } else {
+              roleRaw = (parts[1] || "student").toLowerCase();
+            }
+          }
+
+          const username = generateUsernameFromName(full_name);
+          if (!email || !email.includes("@")) {
+            const orgSlug = currentTenant?.slug || "estudiantes";
+            email = `${username}@${orgSlug}.edu.co`;
+          }
+
           const role = validRoles.includes(roleRaw as any) ? (roleRaw as "admin" | "teacher" | "student") : "student";
-          rows.push({ email, full_name, role });
+          rows.push({ email, full_name, username, role });
         }
         resolve(rows);
       };
@@ -666,10 +720,11 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
 
     for (const row of importPreview) {
       try {
+        const cleanUsername = (row.username || row.email.trim().split('@')[0]).toLowerCase().replace(/[^a-z0-9._-]/g, '');
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: row.email.trim(),
           password: importDefaultPassword,
-          options: { data: { full_name: row.full_name || row.email.trim() } },
+          options: { data: { full_name: row.full_name || row.email.trim(), username: cleanUsername } },
         });
         if (signUpError) {
           if (signUpError.message?.includes("already registered")) {
@@ -682,7 +737,7 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
         if (!data.user) continue;
         const userId = data.user.id;
         await supabase.from("profiles").upsert(
-          { user_id: userId, full_name: row.full_name || data.user.email || "Usuario", email: data.user.email },
+          { user_id: userId, full_name: row.full_name || data.user.email || "Usuario", email: data.user.email, username: cleanUsername },
           { onConflict: "user_id" }
         );
         const addRoleWithRetry = async (attempt = 0): Promise<void> => {
@@ -851,7 +906,8 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
 
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name.toLowerCase().includes(searchTerm.toLowerCase())
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.username && user.username.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -960,6 +1016,29 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                         required
                       />
                     </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="user_username">Nombre de usuario</Label>
+                        <span className="text-xs text-muted-foreground">opcional</span>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground text-sm font-semibold">@</span>
+                        <Input
+                          id="user_username"
+                          value={formData.username}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              username: e.target.value.toLowerCase().replace(/[^a-z0-9._-]/g, '')
+                            })
+                          }
+                          placeholder="ej: carlos123"
+                          className="pl-8"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                        />
+                      </div>
+                    </div>
                     {currentUserRole === "admin" && (
                       <div className="space-y-2">
                         <Label htmlFor="role">Rol</Label>
@@ -1043,11 +1122,16 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                 filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {user.id === currentUser?.id && (
-                          <span className="w-2 h-2 bg-primary rounded-full" />
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          {user.id === currentUser?.id && (
+                            <span className="w-2 h-2 bg-primary rounded-full" />
+                          )}
+                          {user.full_name || "Sin nombre"}
+                        </div>
+                        {user.username && (
+                          <span className="text-xs text-muted-foreground font-mono">@{user.username}</span>
                         )}
-                        {user.full_name || "Sin nombre"}
                       </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
@@ -1277,15 +1361,17 @@ const UsersManagement = ({ currentTenant, currentUserRole, tenants = [], onInvit
                     <TableRow>
                       <TableHead>Email</TableHead>
                       <TableHead>Nombre</TableHead>
+                      <TableHead>Usuario</TableHead>
                       <TableHead>Rol</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {importPreview.slice(0, 20).map((row, i) => (
                       <TableRow key={i}>
-                        <TableCell className="font-medium">{row.email}</TableCell>
-                        <TableCell>{row.full_name}</TableCell>
-                        <TableCell>{row.role}</TableCell>
+                        <TableCell className="font-medium text-xs">{row.email}</TableCell>
+                        <TableCell className="text-xs">{row.full_name}</TableCell>
+                        <TableCell className="text-primary font-mono text-xs">{row.username}</TableCell>
+                        <TableCell className="text-xs">{row.role}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

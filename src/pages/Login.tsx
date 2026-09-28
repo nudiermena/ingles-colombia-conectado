@@ -5,14 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { BookOpen, Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { BookOpen, Eye, EyeOff, Mail, Lock, User as UserIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTenant } from "@/hooks/useTenant";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -53,12 +53,12 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await signIn(email, password);
+      const { error } = await signIn(identifier, password);
 
       if (error) {
         const message =
           error.message === "Invalid login credentials"
-            ? "Correo o contraseña incorrectos. Verifica e intenta de nuevo."
+            ? "Usuario/correo o contraseña incorrectos. Verifica e intenta de nuevo."
             : error.message === "Email not confirmed"
               ? "Confirma tu correo con el enlace que te enviamos antes de iniciar sesión."
               : error.message ?? "Error al conectar con el servidor. Revisa tu conexión y la configuración del proyecto.";
@@ -72,7 +72,7 @@ const Login = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: "Ocurrió un error inesperado",
+        description: error.message || "Ocurrió un error inesperado",
         variant: "destructive"
       });
     } finally {
@@ -97,24 +97,31 @@ const Login = () => {
           <CardHeader className="space-y-4">
             <CardTitle className="text-2xl text-center">Iniciar Sesión</CardTitle>
             <p className="text-muted-foreground text-center">
-              Accede a tu cuenta y continúa aprendiendo
+              Accede con tu usuario o correo electrónico
             </p>
           </CardHeader>
 
           <CardContent className="space-y-6">
             <form className="space-y-4" onSubmit={handleSubmit}>
-              {/* Email Field */}
+              {/* Username or Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Correo Electrónico</Label>
+                <Label htmlFor="identifier">Correo Electrónico o Usuario</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                  {identifier.includes("@") ? (
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors" />
+                  ) : (
+                    <UserIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 transition-colors" />
+                  )}
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="identifier"
+                    type="text"
+                    placeholder="tu@email.com o usuario"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     className="pl-10"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck="false"
                     required
                   />
                 </div>

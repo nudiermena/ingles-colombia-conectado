@@ -18,26 +18,32 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string
           id: string
           updated_at: string
           user_id: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name: string
           id?: string
           updated_at?: string
           user_id: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string
           id?: string
           updated_at?: string
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -108,6 +114,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_email_by_identifier: {
+        Args: { _identifier: string }
+        Returns: string | null
+      }
       get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role_in_tenant: {
         Args: {
